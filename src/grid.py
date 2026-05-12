@@ -12,10 +12,10 @@ def generar_capa_campo(n, dx):
     k_max = cp.pi / cfg.LAMBDA_MIN
 
     zeta = cfg.N_SPEC + 2.0
-    with cp.errstate(divide="ignore", invalid="ignore"):
-        sigma_k = cp.where(
-            (k_mag >= k_min) & (k_mag <= k_max), k_mag ** (-zeta / 2.0), 0.0
-        )
+    k_safe = cp.where(k_mag == 0, 1e-20, k_mag)
+    sigma_k = cp.where(
+        (k_mag >= k_min) & (k_mag <= k_max), k_safe ** (-zeta / 2.0), 0.0
+    )
 
     A_k = []
     for _ in range(3):
@@ -32,14 +32,10 @@ def generar_capa_campo(n, dx):
 
 def obtener_malla_amr():
     bx_b, by_b, bz_b = generar_capa_campo(cfg.N_BASE, cfg.DX_BASE)
-
-    # Normalización local de la malla base
     b_rms_b = cp.sqrt(cp.mean(bx_b**2 + by_b**2 + bz_b**2))
     bx_b, by_b, bz_b = bx_b / b_rms_b, by_b / b_rms_b, bz_b / b_rms_b
 
     bx_r, by_r, bz_r = generar_capa_campo(cfg.N_REFINADO, cfg.DX_REFINADO)
-
-    # Normalización local de la malla refinada para coherencia estadística
     b_rms_r = cp.sqrt(cp.mean(bx_r**2 + by_r**2 + bz_r**2))
     bx_r, by_r, bz_r = bx_r / b_rms_r, by_r / b_rms_r, bz_r / b_rms_r
 
@@ -52,9 +48,11 @@ def obtener_malla_amr():
     def refinar(base, refinado):
         zoom = cfg.N_REFINADO // cfg.N_BASE
         temp = cp.repeat(cp.repeat(cp.repeat(refinado, zoom, 0), zoom, 1), zoom, 2)
+
         start = (temp.shape[0] - cfg.N_BASE) // 2
         end = start + cfg.N_BASE
         cropped = temp[start:end, start:end, start:end]
+
         return cp.where(mascara, cropped, base)
 
     return refinar(bx_b, bx_r), refinar(by_b, by_r), refinar(bz_b, bz_r), r
