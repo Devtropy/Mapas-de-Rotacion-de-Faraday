@@ -125,7 +125,7 @@ def fig6_analisis_halo_radio(ruta, r_mapa, bc, i_map, q_map, u_map):
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
 
-    im = ax1.imshow(i_map, cmap="cmap", extent=[-384, 384, -384, 384])
+    im = ax1.imshow(i_map, cmap="hot", extent=[-384, 384, -384, 384])
     ax1.set_title("Mapa de porcentaje de polarización", fontsize=13)
 
     skip = 8
