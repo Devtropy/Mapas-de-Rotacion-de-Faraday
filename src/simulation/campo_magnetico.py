@@ -26,7 +26,7 @@ def turbulencia(Parametros):
 
     with np.errstate(divide="ignore", invalid="ignore"):
         sigma_k = np.where(
-            (k_mag > k_min) & (k_mag < k_max), k_mag ** (-(Parametros.n + 2) / 2), 0
+            (k_mag > k_min) & (k_mag < k_max), k_mag ** (-(n_espectral + 2) / 2), 0
         ).astype(np.float32)
 
     A_k = np.zeros((3, N, N, N), dtype=complex)

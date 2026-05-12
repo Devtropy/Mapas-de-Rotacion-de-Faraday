@@ -1,17 +1,19 @@
-from dataclasses import dataclass
+import cupy as cp
 
+N_BASE = 256
+N_REFINADO = 512
+DX_BASE = 6.0
+DX_REFINADO = 3.0
+RADIO_REFINAMIENTO = 200.0
 
-@dataclass
-class Parametros:
-    n0: float = 10e-3
-    rc: float = 400
-    beta: float = 0.6
-    B0: float = 1e-6
-    mu: float = 0.4
-    p: float = 3
-    nu: float = 1.4
-    n: float = 11 / 3
-    lambda_min: float = 6
-    lambda_max: float = 768
-    dx: float = 3
-    N: int = 512
+N0 = 1e-3
+RC = 400.0
+BETA = 0.6
+B0 = 1.0
+LAMBDA_MIN = 6.0
+LAMBDA_MAX = 768.0
+N_SPEC = 3.0
+P_SPEC = 3.0
+NU = 1.4e9
+C = 3e8
+LAMBDA_ONDA = C / NU
