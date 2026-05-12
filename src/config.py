@@ -1,8 +1,6 @@
-import cupy as cp
-
 N_BASE = 128
 N_REFINADO = 256
-DX_BASE = 6.0
+DX_BASE = 10.0
 DX_REFINADO = 3.0
 RADIO_REFINAMIENTO = 200.0
 
@@ -10,6 +8,7 @@ N0 = 1e-3
 RC = 400.0
 BETA = 0.6
 B0 = 1.0
+MU = 0.5
 LAMBDA_MIN = 6.0
 LAMBDA_MAX = 768.0
 N_SPEC = 3.0

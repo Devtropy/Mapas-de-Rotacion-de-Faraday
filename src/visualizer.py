@@ -4,75 +4,107 @@ import os
 import config as cfg
 
 
-def generar_graficos_estudio(ruta_data):
-    # Crear carpetas de destino basadas en las screenshots
-    dir_faraday = os.path.join(ruta_data, "Faraday")
-    dir_polarizacion = os.path.join(ruta_data, "Polarizacion")
+def calcular_perfil_radial(mapa, n_bins=20):
+    n = mapa.shape[0]
+    eje = np.linspace(-n / 2, n / 2, n) * cfg.DX_BASE
+    xx, yy = np.meshgrid(eje, eje)
+    r_mapa = np.sqrt(xx**2 + yy**2)
 
-    for d in [dir_faraday, dir_polarizacion]:
-        if not os.path.exists(d):
-            os.makedirs(d, exist_ok=True)
+    r_max = n * cfg.DX_BASE / 2
+    bins = np.linspace(0, r_max, n_bins)
+    bin_centers = (bins[:-1] + bins[1:]) / 2
 
-    # Carga de datos con manejo de errores
-    try:
-        rm = np.load(os.path.join(ruta_data, "rm_mapa.npy"))
-        i_tot = np.load(os.path.join(ruta_data, "intensidad.npy"))
-        q = np.load(os.path.join(ruta_data, "stokes_q.npy"))
-        u = np.load(os.path.join(ruta_data, "stokes_u.npy"))
-    except FileNotFoundError as e:
-        print(f"Error: No se encontró un archivo .npy en {ruta_data}")
-        return
+    sigma_perfil = []
+    mean_perfil = []
 
-    p_frac = np.sqrt(q**2 + u**2) / (i_tot + 1e-15)
-    psi = 0.5 * np.arctan2(u, q)
-    x_dim = np.linspace(-768, 768, rm.shape[0])
-    x, y = np.meshgrid(x_dim, x_dim)
+    for i in range(len(bins) - 1):
+        mascara = (r_mapa >= bins[i]) & (r_mapa < bins[i + 1])
+        if np.any(mascara):
+            datos_bin = mapa[mascara]
+            sigma_perfil.append(np.std(datos_bin))
+            mean_perfil.append(np.abs(np.mean(datos_bin)))
+        else:
+            sigma_perfil.append(0)
+            mean_perfil.append(0)
 
-    # --- Carpeta Faraday ---
-    plt.figure(figsize=(8, 7))
-    plt.imshow(rm, cmap="seismic", extent=[-768, 768, -768, 768])
-    plt.title("Medida de Rotación (RM)")
-    plt.colorbar(label="rad/m^2")
-    plt.gca().add_patch(plt.Circle((0, 0), cfg.RC, color="yellow", fill=False, ls="--"))
-    plt.savefig(os.path.join(dir_faraday, "01_mapa_rm.png"), dpi=300)
-    plt.close()
+    return bin_centers, np.array(sigma_perfil), np.array(mean_perfil)
 
-    plt.figure(figsize=(8, 6))
-    plt.hist(rm.flatten(), bins=50, color="skyblue", edgecolor="black", density=True)
-    plt.title("Estadística de RM")
-    plt.savefig(os.path.join(dir_faraday, "02_histograma.png"), dpi=300)
-    plt.close()
 
-    # --- Carpeta Polarizacion ---
-    plt.figure(figsize=(8, 7))
-    plt.imshow(np.log10(i_tot + 1e-15), cmap="inferno", extent=[-768, 768, -768, 768])
-    plt.title("Intensidad Sincrotrón")
-    plt.colorbar(label="Log10(I)")
-    plt.savefig(os.path.join(dir_polarizacion, "01_intensidad.png"), dpi=300)
-    plt.close()
+def calcular_funcion_estructura(mapa, n_muestras=500):
+    n = mapa.shape[0]
+    dists = []
+    diff_sq = []
 
-    plt.figure(figsize=(8, 8))
-    plt.imshow(
-        np.log10(i_tot + 1e-15), cmap="gray_r", extent=[-768, 768, -768, 768], alpha=0.5
+    indices = np.random.randint(0, n, size=(n_muestras, 2))
+
+    for i in range(n_muestras):
+        for j in range(i + 1, n_muestras):
+            y1, x1 = indices[i]
+            y2, x2 = indices[j]
+
+            d = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2) * cfg.DX_BASE
+            diff = (mapa[y1, x1] - mapa[y2, x2]) ** 2
+
+            dists.append(d)
+            diff_sq.append(diff)
+
+    dists = np.array(dists)
+    diff_sq = np.array(diff_sq)
+
+    bins = np.logspace(np.log10(cfg.DX_BASE), np.log10(n * cfg.DX_BASE / 2), 20)
+    bin_centers = (bins[:-1] + bins[1:]) / 2
+    s_l = []
+
+    for i in range(len(bins) - 1):
+        mascara = (dists >= bins[i]) & (dists < bins[i + 1])
+        if np.any(mascara):
+            s_l.append(np.mean(diff_sq[mascara]))
+        else:
+            s_l.append(np.nan)
+
+    return bin_centers, np.array(s_l)
+
+
+def formula_analitica_sigma(r_perp, b0, lambda_c):
+    from scipy.special import gamma
+
+    k = 441.0
+    term1 = k * b0 * cfg.N0 * np.sqrt(cfg.RC * lambda_c)
+    term2 = (1 + (r_perp / cfg.RC) ** 2) ** ((6 * cfg.BETA - 1) / 4)
+    term3 = np.sqrt(gamma(3 * cfg.BETA - 0.5) / gamma(3 * cfg.BETA))
+    return (term1 / term2) * term3
+
+
+def generar_graficos_estudio(ruta_datos):
+    rm_map = np.load(os.path.join(ruta_datos, "rm_mapa.npy"))
+
+    r_cent, sigma_rm, mean_rm = calcular_perfil_radial(rm_map)
+    dist_sf, s_l = calcular_funcion_estructura(rm_map)
+
+    fig, axs = plt.subplots(1, 3, figsize=(18, 5))
+
+    axs[0].plot(r_cent, sigma_rm, "ro-", label="Simulación $\sigma_{RM}$")
+    analitico = formula_analitica_sigma(r_cent, cfg.B0, cfg.LAMBDA_MIN)
+    axs[0].plot(
+        r_cent, analitico, "k--", label=r"Analítico ($\Lambda_c = \Lambda_{min}$)"
     )
-    skip = max(1, rm.shape[0] // 20)
-    plt.quiver(
-        x[::skip, ::skip],
-        y[::skip, ::skip],
-        p_frac[::skip, ::skip] * np.cos(psi[::skip, ::skip]),
-        p_frac[::skip, ::skip] * np.sin(psi[::skip, ::skip]),
-        pivot="middle",
-        color="red",
-        headwidth=0,
-        scale=15,
-    )
-    plt.title("Vectores de Ángulo de Posición")
-    plt.savefig(os.path.join(dir_polarizacion, "02_vectores.png"), dpi=300)
+    axs[0].set_xlabel("Distancia al centro (kpc)")
+    axs[0].set_ylabel(r"$\sigma_{RM}$ (rad m$^{-2}$)")
+    axs[0].legend()
+    axs[0].set_title("Perfil Radial de Fluctuaciones")
+
+    ratio = mean_rm / (sigma_rm + 1e-10)
+    axs[1].plot(r_cent, ratio, "go-")
+    axs[1].axhline(y=np.mean(ratio), color="r", linestyle="--")
+    axs[1].set_xlabel("Distancia al centro (kpc)")
+    axs[1].set_ylabel(r"$|\langle RM \rangle| / \sigma_{RM}$")
+    axs[1].set_title("Ratio de Escalas (Murgia Fig. 2)")
+
+    axs[2].loglog(dist_sf, s_l, "bo-")
+    axs[2].set_xlabel(r"Separación $\Lambda$ (kpc)")
+    axs[2].set_ylabel(r"$S(\Lambda)$ (rad$^2$ m$^{-4}$)")
+    axs[2].set_title("Función de Estructura (Murgia Fig. 9)")
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(ruta_datos, "analisis_faraday.png"), dpi=300)
     plt.close()
-
-    print(f"Gráficos generados con éxito en: {ruta_data}")
-
-
-if __name__ == "__main__":
-    # Si quieres ejecutarlo manualmente para una carpeta específica:
-    generar_graficos_estudio("../results/estudio_parametrico/n3_b0_1")
