@@ -218,7 +218,7 @@ def generar_graficos_estudio(ruta_destino):
     fig3_tendencias_normalizadas(ruta_destino)
     fig4_comparacion_analitica(ruta_destino, bc, s_rm)
     fig5_despolarizacion_haz(ruta_destino, bc)
-    fig6_halo_analysis(ruta_destino, r_mapa, bc, i_map, q_map, u_map)
+    fig6_analisis_halo_radio(ruta_destino, r_mapa, bc, i_map, q_map, u_map)
     fig7_correlacion_rayosx(ruta_destino, s_rm)
     fig8_ajuste_a119(ruta_destino, bc, s_rm)
     fig9_funcion_estructura(ruta_destino, rm_map)
