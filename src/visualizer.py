@@ -134,77 +134,6 @@ def fig6_analisis_halo_radio(ruta, r_mapa, bc, i_map, q_map, u_map):
     plt.close()
 
 
-def fig7_correlacion_rayosx(ruta, s_rm):
-    sx = np.logspace(-4, -1, len(s_rm))
-    plt.figure(figsize=(7, 6))
-    plt.loglog(sx, s_rm, "ro")
-    plt.xlabel(r"$S_x$ (cts s$^{-1}$ arcmin$^{-2}$)", fontsize=12)
-    plt.ylabel(r"$\sigma_{RM}$ (rad m$^{-2}$)", fontsize=12)
-    plt.title(r"Correlación $RM \propto S_x^{\alpha}$", fontsize=14)
-    plt.grid(True, which="both", linestyle="--", alpha=0.5)
-    plt.savefig(os.path.join(ruta, "figura_7.png"))
-    plt.close()
-
-
-def fig8_ajuste_a119(ruta, bc, s_rm):
-    plt.figure(figsize=(7, 6))
-    plt.plot(bc, s_rm, "ro", label="Datos observados (Abell 119)")
-    plt.plot(
-        bc, s_rm * 0.92, "k-", label=r"Mejor ajuste $\langle B \rangle_0 = 5 \mu G$"
-    )
-    plt.xlabel("Distancia (kpc)", fontsize=12)
-    plt.ylabel(r"$\sigma_{RM}$ (rad m$^{-2}$)", fontsize=12)
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    plt.savefig(os.path.join(ruta, "figura_8.png"))
-    plt.close()
-
-
-def fig9_funcion_estructura(ruta, rm_map):
-    n = rm_map.shape[0]
-    idx = np.random.randint(0, n, size=(400, 2))
-    d, diff = [], []
-    for i in range(400):
-        for j in range(i + 1, 400):
-            d.append(np.sqrt(np.sum((idx[i] - idx[j]) ** 2)) * cfg.DX_BASE)
-            diff.append(
-                (rm_map[idx[i][0], idx[i][1]] - rm_map[idx[j][0], idx[j][1]]) ** 2
-            )
-    plt.figure(figsize=(7, 6))
-    plt.loglog(d, diff, "k.", alpha=0.2)
-    plt.xlabel(r"Separación $\Lambda$ (kpc)", fontsize=12)
-    plt.ylabel(r"Función de estructura $S(\Lambda)$ (rad$^2$ m$^{-4}$)", fontsize=12)
-    plt.title("Función de estructura de la imagen de RM", fontsize=14)
-    plt.savefig(os.path.join(ruta, "figura_9.png"))
-    plt.close()
-
-
-def fig10_espectro_potencia_compuesto(ruta):
-    k = np.logspace(-3, 0, 50)
-    plt.figure(figsize=(7, 6))
-    plt.loglog(k, k**-2, "k-", label="A119 observado")
-    plt.loglog(k, k**-2.2, "g--", label="Simulación n=2")
-    plt.xlabel(r"k (1/kpc)", fontsize=12)
-    plt.ylabel(r"$|RM_k|^2$", fontsize=12)
-    plt.title("Espectro de potencia de RM promedio radial", fontsize=14)
-    plt.legend()
-    plt.savefig(os.path.join(ruta, "figura_10.png"))
-    plt.close()
-
-
-def fig11_ratio_estadistico_final(ruta):
-    ls = np.linspace(10, 150, 20)
-    plt.figure(figsize=(7, 6))
-    plt.plot(ls, np.ones_like(ls) * 0.6, "ko", label="Muestra de cúmulos")
-    plt.axhline(0.6, color="k", linestyle="-", label="Nivel n=2")
-    plt.ylabel(r"$|\langle RM \rangle| / \sigma_{RM}$", fontsize=12)
-    plt.xlabel(r"Tamaño de la región de muestreo $\Lambda_s$ (kpc)", fontsize=12)
-    plt.title("Ratio estadístico vs tamaño de muestreo", fontsize=14)
-    plt.legend()
-    plt.savefig(os.path.join(ruta, "figura_11.png"))
-    plt.close()
-
-
 def generar_graficos_estudio(ruta_destino):
     rm_map = np.load(os.path.join(ruta_destino, "rm_mapa.npy"))
     i_map = np.load(os.path.join(ruta_destino, "intensidad.npy"))
@@ -219,8 +148,3 @@ def generar_graficos_estudio(ruta_destino):
     fig4_comparacion_analitica(ruta_destino, bc, s_rm)
     fig5_despolarizacion_haz(ruta_destino, bc)
     fig6_analisis_halo_radio(ruta_destino, r_mapa, bc, i_map, q_map, u_map)
-    fig7_correlacion_rayosx(ruta_destino, s_rm)
-    fig8_ajuste_a119(ruta_destino, bc, s_rm)
-    fig9_funcion_estructura(ruta_destino, rm_map)
-    fig10_espectro_potencia_compuesto(ruta_destino)
-    fig11_ratio_estadistico_final(ruta_destino)
