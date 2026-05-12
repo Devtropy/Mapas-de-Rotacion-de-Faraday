@@ -28,8 +28,8 @@ def ejecutar_simulacion(n_val, b0_val, ruta_destino):
     i_map, j_nu = calcular_sincrotron(bx, by, ne_rel)
     q_map, u_map = calcular_mapas_polarizacion(bx, by, bz, j_nu, ne)
 
-    factor_unidades = 1000.0 if cfg.DX_BASE < 100 else 1.0
-    rm_map = cp.sum(812.0 * ne * bz * (cfg.DX_BASE * factor_unidades), axis=2)
+    dx_pc = cfg.DX_BASE * 1000.0
+    rm_map = cp.sum(0.812 * ne * bz * dx_pc, axis=2)
 
     os.makedirs(ruta_destino, exist_ok=True)
     cp.save(os.path.join(ruta_destino, "rm_mapa.npy"), rm_map.get())
