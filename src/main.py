@@ -4,7 +4,7 @@ import config as cfg
 from grid import obtener_malla_amr
 from simulation.faraday import calcular_sincrotron
 from simulation.Polaridad import calcular_mapas_polarizacion
-from visualizer import generar_plots
+from visualizer import generar_graficos_individuales
 
 
 def ejecutar():
@@ -29,7 +29,7 @@ def ejecutar():
     del bx, by, bz, r, ne, ne_rel, j_nu
     cp.get_default_memory_pool().free_all_blocks()
 
-    generar_plots()
+    generar_graficos_individuales()
 
 
 if __name__ == "__main__":
