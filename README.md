@@ -2,7 +2,7 @@
 
 ## Resumen del Proyecto
 
-Este proyecto es una simulación numérica de alto rendimiento desarrollada para modelar la estructura de campos magnéticos turbulentos y sus firmas observacionales en el Medio Intracúmulo (ICM). Utilizando la arquitectura paralela de **NVIDIA CUDA**, este proyecto permite simular la naturaleza estocástica de los campos magnéticos galácticos y generar mapas sintéticos de Medidas de Rotación (RM) e intensidad de emisión sincrotrón.
+Este proyecto es una simulación numérica de alto rendimiento desarrollada para modelar la estructura de campos magnéticos turbulentos y sus firmas observacionales en el Medio Intracúmulo (ICM).Este proyecto permite simular la naturaleza estocástica de los campos magnéticos galácticos y generar mapas sintéticos de Medidas de Rotación (RM) e intensidad de emisión sincrotrón.
 
 La simulación genera campos gaussianos isotrópicos bajo la restricción de divergencia nula ($\nabla \cdot \mathbf{B} = 0$) y procesa poblaciones de electrones relativistas.
 
