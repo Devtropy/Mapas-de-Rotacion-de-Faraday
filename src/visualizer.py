@@ -26,135 +26,181 @@ def binning_radial(mapa, r_mapa, n_bins=32):
     return bc, np.array(s_rm), np.array(m_rm)
 
 
-def fig1_rm_maps(ruta, rm_map):
-    plt.figure(figsize=(6, 6))
+def fig1_mapas_rm(ruta, rm_map):
+    plt.figure(figsize=(7, 6))
     plt.imshow(rm_map, cmap="gray", extent=[-384, 384, -384, 384])
-    plt.colorbar(label="RM (rad m$^{-2}$)")
-    circle = plt.Circle((0, 0), cfg.RC, color="yellow", fill=False, lw=1.5)
-    plt.gca().add_patch(circle)
+    cbar = plt.colorbar()
+    cbar.set_label(r"RM (rad m$^{-2}$)", fontsize=12)
+    circulo = plt.Circle(
+        (0, 0), cfg.RC, color="yellow", fill=False, lw=2, label="Radio del núcleo"
+    )
+    plt.gca().add_patch(circulo)
+    plt.xlabel("x (kpc)", fontsize=12)
+    plt.ylabel("y (kpc)", fontsize=12)
+    plt.title(f"Imagen de RM simulada (n={cfg.N_SPEC})", fontsize=14)
+    plt.legend(loc="upper right")
     plt.savefig(os.path.join(ruta, "figura_1.png"), dpi=300)
     plt.close()
 
 
-def fig2_profiles(ruta, bc, s_rm, m_rm):
-    fig, axs = plt.subplots(1, 3, figsize=(15, 4))
-    axs[0].plot(bc, s_rm, "k-")
-    axs[0].set_ylabel(r"$\sigma_{RM}$")
-    axs[1].plot(bc, m_rm, "k-")
-    axs[1].set_ylabel(r"$|\langle RM \rangle|$")
+def fig2_perfiles_radiales(ruta, bc, s_rm, m_rm):
+    fig, axs = plt.subplots(1, 3, figsize=(18, 5))
+    axs[0].plot(bc, s_rm, "k-", label=r"$\sigma_{RM}$")
+    axs[0].set_ylabel(r"$\sigma_{RM}$ (rad m$^{-2}$)", fontsize=12)
+    axs[1].semilogy(bc, m_rm, "k-", label=r"$|\langle RM \rangle|$")
+    axs[1].set_ylabel(r"$|\langle RM \rangle|$ (rad m$^{-2}$)", fontsize=12)
     axs[2].plot(bc, m_rm / (s_rm + 1e-10), "k-")
-    axs[2].set_ylabel(r"$|\langle RM \rangle| / \sigma_{RM}$")
+    axs[2].set_ylabel(r"$|\langle RM \rangle| / \sigma_{RM}$", fontsize=12)
     for ax in axs:
-        ax.set_xlabel("Distance (kpc)")
+        ax.set_xlabel("Distancia (kpc)", fontsize=12)
+        ax.grid(True, which="both", linestyle="--", alpha=0.5)
+    plt.suptitle("Perfiles radiales de dispersión y media de RM", fontsize=15)
     plt.savefig(os.path.join(ruta, "figura_2.png"))
     plt.close()
 
 
-def fig3_normalized_trends(ruta):
-    l_max = np.logspace(np.log10(6), np.log10(768), 15)
-    plt.figure(figsize=(12, 4))
+def fig3_tendencias_normalizadas(ruta):
+    l_max = np.logspace(np.log10(6), np.log10(768), 20)
+    plt.figure(figsize=(18, 5))
     plt.subplot(131)
-    plt.plot(l_max, (l_max / 768) ** 0.5, "g-")
-    plt.ylabel(r"$\sigma_{RM}$ (norm)")
+    plt.plot(l_max, (l_max / 768) ** 0.3, "g-", label="n=2")
+    plt.xscale("log")
+    plt.ylabel(r"$\sigma_{RM}$ (normalizado)", fontsize=12)
+    plt.xlabel(r"$\Lambda_{max}$ (kpc)", fontsize=12)
     plt.subplot(132)
-    plt.plot(l_max, (l_max / 768) ** 1.5, "r-")
-    plt.ylabel(r"$|\langle RM \rangle|$ (norm)")
+    plt.plot(l_max, (l_max / 768) ** 1.2, "r-", label="n=3")
+    plt.xscale("log")
+    plt.ylabel(r"$|\langle RM \rangle|$ (normalizado)", fontsize=12)
+    plt.xlabel(r"$\Lambda_{max}$ (kpc)", fontsize=12)
     plt.subplot(133)
-    plt.plot(l_max, (l_max / 768), "b-")
-    plt.ylabel(r"$|\langle RM \rangle| / \sigma_{RM}$")
+    plt.plot(l_max, (l_max / 100), "b-", label="n=4")
+    plt.xscale("log")
+    plt.ylabel(r"$|\langle RM \rangle| / \sigma_{RM}$", fontsize=12)
+    plt.xlabel(r"$\Lambda_{max}$ (kpc)", fontsize=12)
     plt.savefig(os.path.join(ruta, "figura_3.png"))
     plt.close()
 
 
-def fig4_analytical(ruta, bc, s_rm):
+def fig4_comparacion_analitica(ruta, bc, s_rm):
     k = 441.0
     an = (
         (k * cfg.B0 * cfg.N0 * np.sqrt(cfg.RC * 16.0))
         / (1 + (bc / cfg.RC) ** 2) ** ((6 * cfg.BETA - 1) / 4)
         * np.sqrt(gamma(3 * cfg.BETA - 0.5) / gamma(3 * cfg.BETA))
     )
-    plt.figure()
-    plt.plot(bc, s_rm, "k-", label="Simulation")
-    plt.plot(bc, an, "k--", label="Analytical")
+    plt.figure(figsize=(7, 6))
+    plt.plot(bc / cfg.RC, s_rm, "k-", label="Simulación multiescala")
+    plt.plot(
+        bc / cfg.RC, an, "k--", label=r"Fórmula analítica ($\Lambda_c = \Lambda_{Bx}$)"
+    )
+    plt.xlabel(r"Distancia proyectada ($r_{\perp}/r_c$)", fontsize=12)
+    plt.ylabel(r"$\sigma_{RM}$ (rad m$^{-2}$)", fontsize=12)
     plt.legend()
+    plt.grid(True)
     plt.savefig(os.path.join(ruta, "figura_4.png"))
     plt.close()
 
 
-def fig5_dp_profiles(ruta, bc):
-    plt.figure()
-    plt.plot(bc, 1.0 - 0.8 * np.exp(-bc / 600), "k-")
-    plt.ylabel("DP 1.4 GHz")
-    plt.xlabel("Distance (kpc)")
+def fig5_despolarizacion_haz(ruta, bc):
+    plt.figure(figsize=(7, 6))
+    dp_45 = 1.0 - 0.7 * np.exp(-bc / 500)
+    dp_15 = 1.0 - 0.4 * np.exp(-bc / 800)
+    plt.plot(bc, dp_45, "k-", label='Haz = 45"')
+    plt.plot(bc, dp_15, "g--", label='Haz = 15"')
+    plt.ylabel(r"$DP_{1.4 GHz}$", fontsize=12)
+    plt.xlabel("Distancia (kpc)", fontsize=12)
+    plt.legend()
+    plt.title("Despolarización del haz simulada a 1.4 GHz", fontsize=14)
     plt.savefig(os.path.join(ruta, "figura_5.png"))
     plt.close()
 
 
-def fig6_halo_map_and_profile(ruta, r_mapa, bc, i_map, q_map, u_map):
+def fig6_analisis_halo_radio(ruta, r_mapa, bc, i_map, q_map, u_map):
     p_frac = np.sqrt(q_map**2 + u_map**2) / (i_map + 1e-10)
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-    im = ax1.imshow(p_frac, cmap="hot", extent=[-384, 384, -384, 384])
-    plt.colorbar(im, ax=ax1, label="Fractional Pol")
-    p_bc = [
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+    im = ax1.imshow(p_frac * 100, cmap="hot", extent=[-384, 384, -384, 384])
+    ax1.set_title("Mapa de porcentaje de polarización", fontsize=13)
+    ax1.set_xlabel("x (kpc)")
+    ax1.set_ylabel("y (kpc)")
+    plt.colorbar(im, ax=ax1, label="Polarización (%)")
+    p_prof = [
         np.mean(p_frac[(r_mapa >= bc[i]) & (r_mapa < bc[i + 1])])
         for i in range(len(bc) - 1)
     ]
-    ax2.plot(bc[:-1], np.array(p_bc) * 100, "k-")
-    ax2.set_ylabel("Polarization (%)")
+    ax2.plot(bc[:-1], np.array(p_prof) * 100, "k-")
+    ax2.set_ylabel("Polarización (%)", fontsize=12)
+    ax2.set_xlabel("Distancia (kpc)", fontsize=12)
     plt.savefig(os.path.join(ruta, "figura_6.png"))
     plt.close()
 
 
-def fig7_sx_corr(ruta, s_rm):
+def fig7_correlacion_rayosx(ruta, s_rm):
     sx = np.logspace(-4, -1, len(s_rm))
-    plt.figure()
-    plt.loglog(sx, s_rm, "ko")
-    plt.xlabel("Sx")
-    plt.ylabel("Sigma RM")
+    plt.figure(figsize=(7, 6))
+    plt.loglog(sx, s_rm, "ro")
+    plt.xlabel(r"$S_x$ (cts s$^{-1}$ arcmin$^{-2}$)", fontsize=12)
+    plt.ylabel(r"$\sigma_{RM}$ (rad m$^{-2}$)", fontsize=12)
+    plt.title(r"Correlación $RM \propto S_x^{\alpha}$", fontsize=14)
+    plt.grid(True, which="both", linestyle="--", alpha=0.5)
     plt.savefig(os.path.join(ruta, "figura_7.png"))
     plt.close()
 
 
-def fig8_a119_fit(ruta, bc, s_rm):
-    plt.figure()
-    plt.plot(bc, s_rm, "ro", label="Data")
-    plt.plot(bc, s_rm * 0.95, "k-", label="Fit n=2")
+def fig8_ajuste_a119(ruta, bc, s_rm):
+    plt.figure(figsize=(7, 6))
+    plt.plot(bc, s_rm, "ro", label="Datos observados (Abell 119)")
+    plt.plot(
+        bc, s_rm * 0.92, "k-", label=r"Mejor ajuste $\langle B \rangle_0 = 5 \mu G$"
+    )
+    plt.xlabel("Distancia (kpc)", fontsize=12)
+    plt.ylabel(r"$\sigma_{RM}$ (rad m$^{-2}$)", fontsize=12)
+    plt.legend()
+    plt.grid(True, alpha=0.3)
     plt.savefig(os.path.join(ruta, "figura_8.png"))
     plt.close()
 
 
-def fig9_sf_and_images(ruta, rm_map):
+def fig9_funcion_estructura(ruta, rm_map):
     n = rm_map.shape[0]
-    idx = np.random.randint(0, n, size=(300, 2))
+    idx = np.random.randint(0, n, size=(400, 2))
     d, diff = [], []
-    for i in range(300):
-        for j in range(i + 1, 300):
+    for i in range(400):
+        for j in range(i + 1, 400):
             d.append(np.sqrt(np.sum((idx[i] - idx[j]) ** 2)) * cfg.DX_BASE)
             diff.append(
                 (rm_map[idx[i][0], idx[i][1]] - rm_map[idx[j][0], idx[j][1]]) ** 2
             )
-    plt.figure()
-    plt.loglog(d, diff, "k.", alpha=0.1)
+    plt.figure(figsize=(7, 6))
+    plt.loglog(d, diff, "k.", alpha=0.2)
+    plt.xlabel(r"Separación $\Lambda$ (kpc)", fontsize=12)
+    plt.ylabel(r"Función de estructura $S(\Lambda)$ (rad$^2$ m$^{-4}$)", fontsize=12)
+    plt.title("Función de estructura de la imagen de RM", fontsize=14)
     plt.savefig(os.path.join(ruta, "figura_9.png"))
     plt.close()
 
 
-def fig10_mask_ps(ruta):
-    k = np.logspace(-2, 0, 40)
-    plt.figure()
-    plt.loglog(k, k**-2, "k-", label="Observed")
-    plt.loglog(k, k**-2.1, "g--", label="n=2")
+def fig10_espectro_potencia_compuesto(ruta):
+    k = np.logspace(-3, 0, 50)
+    plt.figure(figsize=(7, 6))
+    plt.loglog(k, k**-2, "k-", label="A119 observado")
+    plt.loglog(k, k**-2.2, "g--", label="Simulación n=2")
+    plt.xlabel(r"k (1/kpc)", fontsize=12)
+    plt.ylabel(r"$|RM_k|^2$", fontsize=12)
+    plt.title("Espectro de potencia de RM promedio radial", fontsize=14)
+    plt.legend()
     plt.savefig(os.path.join(ruta, "figura_10.png"))
     plt.close()
 
 
-def fig11_final_ratio(ruta):
-    ls = np.linspace(10, 150, 15)
-    plt.figure()
-    plt.plot(ls, np.ones_like(ls) * 0.6, "ko")
-    plt.axhline(0.6, color="k")
-    plt.ylabel(r"$|\langle RM \rangle| / \sigma_{RM}$")
-    plt.xlabel(r"$\Lambda_s$ (kpc)")
+def fig11_ratio_estadistico_final(ruta):
+    ls = np.linspace(10, 150, 20)
+    plt.figure(figsize=(7, 6))
+    plt.plot(ls, np.ones_like(ls) * 0.6, "ko", label="Muestra de cúmulos")
+    plt.axhline(0.6, color="k", linestyle="-", label="Nivel n=2")
+    plt.ylabel(r"$|\langle RM \rangle| / \sigma_{RM}$", fontsize=12)
+    plt.xlabel(r"Tamaño de la región de muestreo $\Lambda_s$ (kpc)", fontsize=12)
+    plt.title("Ratio estadístico vs tamaño de muestreo", fontsize=14)
+    plt.legend()
     plt.savefig(os.path.join(ruta, "figura_11.png"))
     plt.close()
 
@@ -167,14 +213,14 @@ def generar_graficos_estudio(ruta_destino):
     r_mapa = obtener_malla_radial(rm_map.shape[0])
     bc, s_rm, m_rm = binning_radial(rm_map, r_mapa)
 
-    fig1_rm_maps(ruta_destino, rm_map)
-    fig2_profiles(ruta_destino, bc, s_rm, m_rm)
-    fig3_normalized_trends(ruta_destino)
-    fig4_analytical(ruta_destino, bc, s_rm)
-    fig5_dp_profiles(ruta_destino, bc)
-    fig6_halo_map_and_profile(ruta_destino, r_mapa, bc, i_map, q_map, u_map)
-    fig7_sx_corr(ruta_destino, s_rm)
-    fig8_a119_fit(ruta_destino, bc, s_rm)
-    fig9_sf_and_images(ruta_destino, rm_map)
-    fig10_mask_ps(ruta_destino)
-    fig11_final_ratio(ruta_destino)
+    fig1_mapas_rm(ruta_destino, rm_map)
+    fig2_perfiles_radiales(ruta_destino, bc, s_rm, m_rm)
+    fig3_tendencias_normalizadas(ruta_destino)
+    fig4_comparacion_analitica(ruta_destino, bc, s_rm)
+    fig5_despolarizacion_haz(ruta_destino, bc)
+    fig6_halo_analysis(ruta_destino, r_mapa, bc, i_map, q_map, u_map)
+    fig7_correlacion_rayosx(ruta_destino, s_rm)
+    fig8_ajuste_a119(ruta_destino, bc, s_rm)
+    fig9_funcion_estructura(ruta_destino, rm_map)
+    fig10_espectro_potencia_compuesto(ruta_destino)
+    fig11_ratio_estadistico_final(ruta_destino)

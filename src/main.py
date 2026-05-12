@@ -45,7 +45,7 @@ def ejecutar_simulacion(n_val, b0_val, ruta_destino):
 
 def estudio_parametrico():
     valores_n = [2.0, 3.0, 4.0]
-    valores_b0 = [1.0, 2.0]
+    valores_b0 = [1.0, 10.0]
 
     for n in valores_n:
         for b0 in valores_b0:
