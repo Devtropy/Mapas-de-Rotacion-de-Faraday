@@ -89,7 +89,7 @@ def fig4_comparacion_analitica(ruta, bc, s_rm):
         * np.sqrt(gamma(3 * cfg.BETA - 0.5) / gamma(3 * cfg.BETA))
     )
     plt.figure(figsize=(7, 6))
-    plt.plot(bc / cfg.RC, s_rm, "k-", label="Simulación multiescala")
+    plt.plot(bc / cfg.RC, s_rm, "k-", label="Simulación ")
     plt.plot(
         bc / cfg.RC, an, "k--", label=r"Fórmula analítica ($\Lambda_c = \Lambda_{Bx}$)"
     )
