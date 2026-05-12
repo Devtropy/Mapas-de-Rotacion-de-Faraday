@@ -116,13 +116,36 @@ def fig5_despolarizacion_haz(ruta, bc):
 
 
 def fig6_analisis_halo_radio(ruta, r_mapa, bc, i_map, q_map, u_map):
-    p_frac = np.sqrt(q_map**2 + u_map**2) / (i_map + 1e-10)
+    p_pol = np.sqrt(q_map**2 + u_map**2)
+    p_frac = p_pol / (i_map + 1e-10)
+    psi = 0.5 * np.arctan2(u_map, q_map)
+
+    u_vec = p_frac * np.cos(psi)
+    v_vec = p_frac * np.sin(psi)
+
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
-    im = ax1.imshow(p_frac * 100, cmap="hot", extent=[-384, 384, -384, 384])
-    ax1.set_title("Mapa de porcentaje de polarización", fontsize=13)
-    ax1.set_xlabel("x (kpc)")
-    ax1.set_ylabel("y (kpc)")
-    plt.colorbar(im, ax=ax1, label="Polarización (%)")
+
+    im = ax1.imshow(i_map, cmap="magma", extent=[-384, 384, -384, 384])
+    ax1.set_title("Brillo del Halo y Vectores de Polarización", fontsize=13)
+
+    skip = 8
+    x, y = np.meshgrid(
+        np.linspace(-384, 384, i_map.shape[0]), np.linspace(-384, 384, i_map.shape[1])
+    )
+
+    ax1.quiver(
+        x[::skip, ::skip],
+        y[::skip, ::skip],
+        u_vec[::skip, ::skip],
+        v_vec[::skip, ::skip],
+        color="white",
+        pivot="middle",
+        scale=10,
+        headwidth=0,
+    )
+
+    plt.colorbar(im, ax=ax1, label="Intensidad Total (I)")
+
     p_prof = [
         np.mean(p_frac[(r_mapa >= bc[i]) & (r_mapa < bc[i + 1])])
         for i in range(len(bc) - 1)
@@ -130,7 +153,10 @@ def fig6_analisis_halo_radio(ruta, r_mapa, bc, i_map, q_map, u_map):
     ax2.plot(bc[:-1], np.array(p_prof) * 100, "k-")
     ax2.set_ylabel("Polarización (%)", fontsize=12)
     ax2.set_xlabel("Distancia (kpc)", fontsize=12)
-    plt.savefig(os.path.join(ruta, "figura_6.png"))
+    ax2.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(ruta, "figura_6.png"), dpi=300)
     plt.close()
 
 
