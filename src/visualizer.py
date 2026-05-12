@@ -4,61 +4,75 @@ import os
 import config as cfg
 
 
-def generar_visualizacion_parametrica():
-    ruta_estudio = "../results/estudio_parametrico"
-    if not os.path.exists(ruta_estudio):
-        return
+def generar_graficos_estudio(ruta_data):
+    # Crear carpetas de destino basadas en las screenshots
+    dir_faraday = os.path.join(ruta_data, "Faraday")
+    dir_polarizacion = os.path.join(ruta_data, "Polarizacion")
 
-    for carpeta in os.listdir(ruta_estudio):
-        ruta_data = os.path.join(ruta_estudio, carpeta)
-        ruta_graficos = os.path.join(ruta_data, "graficos")
-        if not os.path.exists(ruta_graficos):
-            os.makedirs(ruta_graficos)
+    for d in [dir_faraday, dir_polarizacion]:
+        if not os.path.exists(d):
+            os.makedirs(d, exist_ok=True)
 
+    # Carga de datos con manejo de errores
+    try:
         rm = np.load(os.path.join(ruta_data, "rm_mapa.npy"))
         i_tot = np.load(os.path.join(ruta_data, "intensidad.npy"))
         q = np.load(os.path.join(ruta_data, "stokes_q.npy"))
         u = np.load(os.path.join(ruta_data, "stokes_u.npy"))
+    except FileNotFoundError as e:
+        print(f"Error: No se encontró un archivo .npy en {ruta_data}")
+        return
 
-        p_frac = np.sqrt(q**2 + u**2) / (i_tot + 1e-15)
-        psi = 0.5 * np.arctan2(u, q)
+    p_frac = np.sqrt(q**2 + u**2) / (i_tot + 1e-15)
+    psi = 0.5 * np.arctan2(u, q)
+    x_dim = np.linspace(-768, 768, rm.shape[0])
+    x, y = np.meshgrid(x_dim, x_dim)
 
-        # Mapa RM Individual
-        plt.figure(figsize=(8, 7))
-        plt.imshow(rm, cmap="seismic", extent=[-768, 768, -768, 768])
-        plt.title(f"Mapa RM - Condición {carpeta}")
-        plt.colorbar(label="rad/m^2")
-        plt.savefig(os.path.join(ruta_graficos, "01_rm.png"))
-        plt.close()
+    # --- Carpeta Faraday ---
+    plt.figure(figsize=(8, 7))
+    plt.imshow(rm, cmap="seismic", extent=[-768, 768, -768, 768])
+    plt.title("Medida de Rotación (RM)")
+    plt.colorbar(label="rad/m^2")
+    plt.gca().add_patch(plt.Circle((0, 0), cfg.RC, color="yellow", fill=False, ls="--"))
+    plt.savefig(os.path.join(dir_faraday, "01_mapa_rm.png"), dpi=300)
+    plt.close()
 
-        # Histograma Comparativo
-        plt.figure(figsize=(8, 6))
-        plt.hist(rm.flatten(), bins=50, density=True, alpha=0.7)
-        plt.title(f"Distribución de RM (sigma={np.std(rm):.2f})")
-        plt.savefig(os.path.join(ruta_graficos, "02_histograma.png"))
-        plt.close()
+    plt.figure(figsize=(8, 6))
+    plt.hist(rm.flatten(), bins=50, color="skyblue", edgecolor="black", density=True)
+    plt.title("Estadística de RM")
+    plt.savefig(os.path.join(dir_faraday, "02_histograma.png"), dpi=300)
+    plt.close()
 
-        # Polarización y Vectores
-        plt.figure(figsize=(8, 8))
-        plt.imshow(
-            np.log10(i_tot + 1e-15), cmap="gray_r", extent=[-768, 768, -768, 768]
-        )
-        x_dim = np.linspace(-768, 768, rm.shape[0])
-        x, y = np.meshgrid(x_dim, x_dim)
-        skip = max(1, rm.shape[0] // 16)
-        plt.quiver(
-            x[::skip, ::skip],
-            y[::skip, ::skip],
-            p_frac[::skip, ::skip] * np.cos(psi[::skip, ::skip]),
-            p_frac[::skip, ::skip] * np.sin(psi[::skip, ::skip]),
-            pivot="middle",
-            color="red",
-            headwidth=0,
-        )
-        plt.title("Intensidad y Vectores de Polarización")
-        plt.savefig(os.path.join(ruta_graficos, "03_polarizacion.png"))
-        plt.close()
+    # --- Carpeta Polarizacion ---
+    plt.figure(figsize=(8, 7))
+    plt.imshow(np.log10(i_tot + 1e-15), cmap="inferno", extent=[-768, 768, -768, 768])
+    plt.title("Intensidad Sincrotrón")
+    plt.colorbar(label="Log10(I)")
+    plt.savefig(os.path.join(dir_polarizacion, "01_intensidad.png"), dpi=300)
+    plt.close()
+
+    plt.figure(figsize=(8, 8))
+    plt.imshow(
+        np.log10(i_tot + 1e-15), cmap="gray_r", extent=[-768, 768, -768, 768], alpha=0.5
+    )
+    skip = max(1, rm.shape[0] // 20)
+    plt.quiver(
+        x[::skip, ::skip],
+        y[::skip, ::skip],
+        p_frac[::skip, ::skip] * np.cos(psi[::skip, ::skip]),
+        p_frac[::skip, ::skip] * np.sin(psi[::skip, ::skip]),
+        pivot="middle",
+        color="red",
+        headwidth=0,
+        scale=15,
+    )
+    plt.title("Vectores de Ángulo de Posición")
+    plt.savefig(os.path.join(dir_polarizacion, "02_vectores.png"), dpi=300)
+    plt.close()
+
+    print(f"Gráficos generados con éxito en: {ruta_data}")
 
 
 if __name__ == "__main__":
-    generar_visualizacion_parametrica()
+    # Si quieres ejecutarlo manualmente para una carpeta específica:
+    generar_graficos_estudio("../results/estudio_parametrico/n3_b0_1")
