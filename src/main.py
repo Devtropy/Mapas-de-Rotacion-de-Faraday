@@ -1,64 +1,50 @@
-import numpy as np
-import matplotlib.pyplot as plt
+import cupy as cp
 import os
 import config as cfg
+from grid import generar_capa_campo
+from simulation.faraday import calcular_sincrotron
+from simulation.Polaridad import calcular_mapas_polarizacion
 
 
-def generar_visualizacion_parametrica():
-    ruta_estudio = "../results/estudio_parametrico"
-    if not os.path.exists(ruta_estudio):
-        return
+def ejecutar_simulacion(n_val, b0_val, ruta_destino):
+    cfg.N_SPEC = n_val
+    cfg.B0 = b0_val
 
-    for carpeta in os.listdir(ruta_estudio):
-        ruta_data = os.path.join(ruta_estudio, carpeta)
-        ruta_graficos = os.path.join(ruta_data, "graficos")
-        if not os.path.exists(ruta_graficos):
-            os.makedirs(ruta_graficos)
+    bx, by, bz = generar_capa_campo(cfg.N_BASE, cfg.DX_BASE)
 
-        rm = np.load(os.path.join(ruta_data, "rm_mapa.npy"))
-        i_tot = np.load(os.path.join(ruta_data, "intensidad.npy"))
-        q = np.load(os.path.join(ruta_data, "stokes_q.npy"))
-        u = np.load(os.path.join(ruta_data, "stokes_u.npy"))
+    eje = cp.linspace(-cfg.N_BASE / 2, cfg.N_BASE / 2, cfg.N_BASE) * cfg.DX_BASE
+    xx, yy, zz = cp.meshgrid(eje, eje, eje, indexing="ij")
+    r = cp.sqrt(xx**2 + yy**2 + zz**2)
 
-        p_frac = np.sqrt(q**2 + u**2) / (i_tot + 1e-15)
-        psi = 0.5 * np.arctan2(u, q)
+    ne = cfg.N0 * (1.0 + (r / cfg.RC) ** 2) ** (-1.5 * cfg.BETA)
+    ne_rel = ne * 0.01
 
-        # Mapa RM Individual
-        plt.figure(figsize=(8, 7))
-        plt.imshow(rm, cmap="seismic", extent=[-768, 768, -768, 768])
-        plt.title(f"Mapa RM - Condición {carpeta}")
-        plt.colorbar(label="rad/m^2")
-        plt.savefig(os.path.join(ruta_graficos, "01_rm.png"))
-        plt.close()
+    i_map, j_nu = calcular_sincrotron(bx, by, ne_rel)
+    q_map, u_map = calcular_mapas_polarizacion(bx, by, bz, j_nu, ne)
+    rm_map = cp.sum(812.0 * ne * bz * cfg.DX_BASE, axis=2)
 
-        # Histograma Comparativo
-        plt.figure(figsize=(8, 6))
-        plt.hist(rm.flatten(), bins=50, density=True, alpha=0.7)
-        plt.title(f"Distribución de RM (sigma={np.std(rm):.2f})")
-        plt.savefig(os.path.join(ruta_graficos, "02_histograma.png"))
-        plt.close()
+    if not os.path.exists(ruta_destino):
+        os.makedirs(ruta_destino)
+    cp.save(os.path.join(ruta_destino, "rm_mapa.npy"), rm_map.get())
+    cp.save(os.path.join(ruta_destino, "intensidad.npy"), i_map.get())
+    cp.save(os.path.join(ruta_destino, "stokes_q.npy"), q_map.get())
+    cp.save(os.path.join(ruta_destino, "stokes_u.npy"), u_map.get())
 
-        # Polarización y Vectores
-        plt.figure(figsize=(8, 8))
-        plt.imshow(
-            np.log10(i_tot + 1e-15), cmap="gray_r", extent=[-768, 768, -768, 768]
-        )
-        x_dim = np.linspace(-768, 768, rm.shape[0])
-        x, y = np.meshgrid(x_dim, x_dim)
-        skip = max(1, rm.shape[0] // 16)
-        plt.quiver(
-            x[::skip, ::skip],
-            y[::skip, ::skip],
-            p_frac[::skip, ::skip] * np.cos(psi[::skip, ::skip]),
-            p_frac[::skip, ::skip] * np.sin(psi[::skip, ::skip]),
-            pivot="middle",
-            color="red",
-            headwidth=0,
-        )
-        plt.title("Intensidad y Vectores de Polarización")
-        plt.savefig(os.path.join(ruta_graficos, "03_polarizacion.png"))
-        plt.close()
+    del bx, by, bz, r, ne, ne_rel, j_nu, i_map, q_map, u_map, rm_map
+    cp.get_default_memory_pool().free_all_blocks()
+
+
+def estudio_parametrico():
+    valores_n = [2.0, 3.0, 4.0]
+    valores_b0 = [1.0, 2.0]
+
+    for n in valores_n:
+        for b0 in valores_b0:
+            nombre_carpeta = f"n{int(n)}_b0_{int(b0)}"
+            ruta = os.path.join("../results/estudio_parametrico", nombre_carpeta)
+            print(f"Iniciando: n={n}, B0={b0}")
+            ejecutar_simulacion(n, b0, ruta)
 
 
 if __name__ == "__main__":
-    generar_visualizacion_parametrica()
+    estudio_parametrico()
