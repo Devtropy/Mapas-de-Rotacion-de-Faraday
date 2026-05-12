@@ -28,7 +28,7 @@ def binning_radial(mapa, r_mapa, n_bins=32):
 
 def fig1_mapas_rm(ruta, rm_map):
     plt.figure(figsize=(7, 6))
-    plt.imshow(rm_map, cmap="viridis", extent=[-384 * 2, 384 * 2, -384 * 2, 384 * 2])
+    plt.imshow(rm_map, cmap="purple", extent=[-384 * 2, 384 * 2, -384 * 2, 384 * 2])
     cbar = plt.colorbar()
     cbar.set_label(r"RM (rad m$^{-2}$)", fontsize=12)
     circulo = plt.Circle(
