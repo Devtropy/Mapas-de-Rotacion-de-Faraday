@@ -1,0 +1,4 @@
+name: Mapas_de_Rotacion_de_Faraday
+channels:
+  - https://conda.anaconda.org/conda-forge
+prefix: /usr
