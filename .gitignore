@@ -9,6 +9,6 @@ build/*
 # Python cache
 __pycache__/
 *.pyc
-enviroment.yml
+*enviroment.yml
 # OS files
 .DS_Store
