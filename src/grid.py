@@ -29,6 +29,19 @@ def generar_capa_campo(n, dx):
 
     return ifftn(bx_k).real, ifftn(by_k).real, ifftn(bz_k).real
 
+def verificar_divergencia(bx, by, bz, dx, etiqueta="Campo"):
+
+    dbx_dx = cp.gradient(bx, dx, axis=0)
+    dby_dy = cp.gradient(by, dx, axis=1)
+    dbz_dz = cp.gradient(bz, dx, axis=2)
+    
+    div_B = dbx_dx + dby_dy + dbz_dz
+    
+    div_mean = cp.mean(cp.abs(div_B))
+    div_max = cp.max(cp.abs(div_B))
+    
+    print(f"[Física - {etiqueta}] Divergencia Media: {div_mean:.4e} | Máxima: {div_max:.4e}")
+    return div_B
 
 def obtener_malla_amr():
     bx_b, by_b, bz_b = generar_capa_campo(cfg.N_BASE, cfg.DX_BASE)
@@ -43,9 +56,12 @@ def obtener_malla_amr():
     xx, yy, zz = cp.meshgrid(eje, eje, eje, indexing="ij")
     r = cp.sqrt(xx**2 + yy**2 + zz**2)
 
-    mascara = r < cfg.RADIO_REFINAMIENTO
+    ancho_transicion = cfg.DX_BASE * 2.0
 
-    def refinar(base, refinado):
+    peso_refinado = 1.0 / (1.0 + cp.exp((r - cfg.RADIO_REFINAMIENTO) / ancho_transicion))
+    peso_base = 1.0 - peso_refinado
+
+    def refinar_suave(base, refinado):
         zoom = cfg.N_REFINADO // cfg.N_BASE
         temp = cp.repeat(cp.repeat(cp.repeat(refinado, zoom, 0), zoom, 1), zoom, 2)
 
@@ -53,6 +69,11 @@ def obtener_malla_amr():
         end = start + cfg.N_BASE
         cropped = temp[start:end, start:end, start:end]
 
-        return cp.where(mascara, cropped, base)
+        return base * peso_base + cropped * peso_refinado
+    bx_final = refinar_suave(bx_b, bx_r)
+    by_final = refinar_suave(by_b, by_r)
+    bz_final = refinar_suave(bz_b, bz_r)
+    
+    verificar_divergencia(bx_final, by_final, bz_final, cfg.DX_BASE, etiqueta="Malla AMR Suavizada")
 
-    return refinar(bx_b, bx_r), refinar(by_b, by_r), refinar(bz_b, bz_r), r
+    return bx_final, by_final, bz_final, r
