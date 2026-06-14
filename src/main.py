@@ -22,7 +22,9 @@ def ejecutar_simulacion(n_val, b0_val, ruta_destino):
     xx, yy, zz = cp.meshgrid(eje, eje, eje, indexing="ij")
     r = cp.sqrt(xx**2 + yy**2 + zz**2)
 
-    ne = (cfg.N0_VAL * (1.0 + (r / cfg.RC_KPC) ** 2) ** (-1.5 * cfg.BETA)).astype(cp.float32)
+    ne = (cfg.N0_VAL * (1.0 + (r / cfg.RC_KPC) ** 2) ** (-1.5 * cfg.BETA)).astype(
+        cp.float32
+    )
     ne_rel = ne * 0.01
 
     i_map, j_nu = calcular_sincrotron(bx, by, ne_rel)
@@ -52,3 +54,7 @@ def estudio_parametrico():
             ruta = os.path.join("../results/estudio_parametrico", nombre_carpeta)
             print(f"Iniciando: n={n}, B0={b0}")
             ejecutar_simulacion(n, b0, ruta)
+
+
+if __name__ == "__main__":
+    estudio_parametrico()
