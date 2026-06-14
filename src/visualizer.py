@@ -6,7 +6,7 @@ from scipy.special import gamma
 
 
 def obtener_malla_radial(n):
-    eje = np.linspace(-n / 2, n / 2, n) * cfg.DX_BASE
+    eje = np.linspace(-n / 2, n / 2, n) * cfg.DX_BASE_KPC
     xx, yy = np.meshgrid(eje, eje)
     return np.sqrt(xx**2 + yy**2)
 
@@ -32,7 +32,7 @@ def fig1_mapas_rm(ruta, rm_map):
     cbar = plt.colorbar()
     cbar.set_label(r"RM (rad m$^{-2}$)", fontsize=12)
     circulo = plt.Circle(
-        (0, 0), cfg.RC, color="yellow", fill=False, lw=2, label="Radio del núcleo"
+        (0, 0), cfg.RC_KPC, color="yellow", fill=False, lw=2, label="Radio del núcleo"
     )
     plt.gca().add_patch(circulo)
     plt.xlabel("x (kpc)", fontsize=12)
@@ -84,14 +84,14 @@ def fig3_tendencias_normalizadas(ruta):
 def fig4_comparacion_analitica(ruta, bc, s_rm):
     k = 441.0
     an = (
-        (k * cfg.B0 * cfg.N0 * np.sqrt(cfg.RC * 16.0))
-        / (1 + (bc / cfg.RC) ** 2) ** ((6 * cfg.BETA - 1) / 4)
+        (k * cfg.B0_MG * cfg.N0_CM3 * np.sqrt(cfg.RC_KPC * 16.0))
+        / (1 + (bc / cfg.RC_KPC) ** 2) ** ((6 * cfg.BETA - 1) / 4)
         * np.sqrt(gamma(3 * cfg.BETA - 0.5) / gamma(3 * cfg.BETA))
     )
     plt.figure(figsize=(7, 6))
-    plt.plot(bc / cfg.RC, s_rm, "k-", label="Simulación ")
+    plt.plot(bc / cfg.RC_KPC, s_rm, "k-", label="Simulación ")
     plt.plot(
-        bc / cfg.RC, an, "k--", label=r"Fórmula analítica ($\Lambda_c = \Lambda_{Bx}$)"
+        bc / cfg.RC_KPC, an, "k--", label=r"Fórmula analítica ($\Lambda_c = \Lambda_{Bx}$)"
     )
     plt.xlabel(r"Distancia proyectada ($r_{\perp}/r_c$)", fontsize=12)
     plt.ylabel(r"$\sigma_{RM}$ (rad m$^{-2}$)", fontsize=12)
