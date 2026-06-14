@@ -37,7 +37,7 @@ def ejecutar_simulacion(n_val, b0_val, ruta_destino):
 
     # para observatorio
     rm_beam, i_beam, q_beam, u_beam, p_beam, frac_pol, dp = aplicar_observacion(
-        rm_map, i_map, q_map, u_map, cfg.BEAM_FWHM_KPC, cfg.DX_BASE
+        rm_map, i_map, q_map, u_map, cfg.BEAM_FWHM_KPC, cfg.DX_BASE_KPC
     )
 
     os.makedirs(ruta_destino, exist_ok=True)
