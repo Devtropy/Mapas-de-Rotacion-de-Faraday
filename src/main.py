@@ -6,7 +6,7 @@ from simulation.faraday import calcular_sincrotron
 from simulation.Polaridad import calcular_mapas_polarizacion
 from visualizer import generar_graficos_estudio
 
-#para el observatorio
+# para el observatorio
 from observatorio.beam import aplicar_observacion
 
 
@@ -34,9 +34,10 @@ def ejecutar_simulacion(n_val, b0_val, ruta_destino):
     dx_pc = cfg.DX_BASE * 1000.0
     rm_map = cp.sum(0.812 * ne * bz * dx_pc, axis=2)
 
- 
-    #para observatorio
-    rm_beam, i_beam, q_beam, u_beam, p_beam, frac_pol, dp = (aplicar_observacion( rm_map, i_map, q_map, u_map, cfg.BEAM_FWHM_KPC, cfg.DX_BASE))
+    # para observatorio
+    rm_beam, i_beam, q_beam, u_beam, p_beam, frac_pol, dp = aplicar_observacion(
+        rm_map, i_map, q_map, u_map, cfg.BEAM_FWHM_KPC, cfg.DX_BASE
+    )
 
     os.makedirs(ruta_destino, exist_ok=True)
     cp.save(os.path.join(ruta_destino, "rm_mapa.npy"), rm_map.get())
@@ -44,7 +45,7 @@ def ejecutar_simulacion(n_val, b0_val, ruta_destino):
     cp.save(os.path.join(ruta_destino, "stokes_q.npy"), q_map.get())
     cp.save(os.path.join(ruta_destino, "stokes_u.npy"), u_map.get())
 
-    #para observatorio
+    # para observatorio
     cp.save(os.path.join(ruta_destino, "rm_mapa_beam.npy"), rm_beam.get())
     cp.save(os.path.join(ruta_destino, "i_beam.npy"), i_beam.get())
     cp.save(os.path.join(ruta_destino, "q_beam.npy"), q_beam.get())
@@ -53,7 +54,26 @@ def ejecutar_simulacion(n_val, b0_val, ruta_destino):
     cp.save(os.path.join(ruta_destino, "fraccion_de_polarizacion.npy"), frac_pol.get())
     cp.save(os.path.join(ruta_destino, "despolarizacion.npy"), dp.get())
 
-    del bx, by, bz, r, ne, ne_rel, j_nu, i_map, q_map, u_map, rm_map, rm_beam, i_beam, q_beam, u_beam, p_beam, frac_pol, dp
+    del (
+        bx,
+        by,
+        bz,
+        r,
+        ne,
+        ne_rel,
+        j_nu,
+        i_map,
+        q_map,
+        u_map,
+        rm_map,
+        rm_beam,
+        i_beam,
+        q_beam,
+        u_beam,
+        p_beam,
+        frac_pol,
+        dp,
+    )
     cp.get_default_memory_pool().free_all_blocks()
 
     generar_graficos_estudio(ruta_destino)
@@ -69,3 +89,7 @@ def estudio_parametrico():
             ruta = os.path.join("../results/estudio_parametrico", nombre_carpeta)
             print(f"Iniciando: n={n}, B0={b0}")
             ejecutar_simulacion(n, b0, ruta)
+
+
+if __name__ == "__main__":
+    estudio_parametrico()
