@@ -1,7 +1,7 @@
 import astropy.units as u
 
 # para el observatorio
-BEAM_FWHM = 50.0
+BEAM_FWHM = 50.0 * u.kpc
 # Parametros para la malla
 N_BASE = 128  # Adimensional
 N_REFINADO = 256  # Adimensional
