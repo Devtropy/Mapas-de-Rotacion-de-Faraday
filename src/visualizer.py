@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import config as cfg
+import config_values as cfg
 from scipy.special import gamma
 
 
@@ -91,7 +91,10 @@ def fig4_comparacion_analitica(ruta, bc, s_rm):
     plt.figure(figsize=(7, 6))
     plt.plot(bc / cfg.RC_KPC, s_rm, "k-", label="Simulación ")
     plt.plot(
-        bc / cfg.RC_KPC, an, "k--", label=r"Fórmula analítica ($\Lambda_c = \Lambda_{Bx}$)"
+        bc / cfg.RC_KPC,
+        an,
+        "k--",
+        label=r"Fórmula analítica ($\Lambda_c = \Lambda_{Bx}$)",
     )
     plt.xlabel(r"Distancia proyectada ($r_{\perp}/r_c$)", fontsize=12)
     plt.ylabel(r"$\sigma_{RM}$ (rad m$^{-2}$)", fontsize=12)
