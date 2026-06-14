@@ -174,3 +174,55 @@ def generar_graficos_estudio(ruta_destino):
     fig4_comparacion_analitica(ruta_destino, bc, s_rm)
     fig5_despolarizacion_haz(ruta_destino, bc)
     fig6_analisis_halo_radio(ruta_destino, r_mapa, bc, i_map, q_map, u_map)
+
+    frac_pol = np.load(os.path.join(ruta_destino, "fraccion_de_polarizacion.npy"))
+    dp = np.load(os.path.join(ruta_destino, "despolarizacion.npy"))
+    fig7_beam_depolarizacion(ruta_destino, frac_pol, dp)
+    fig8_perfil_depolarizacion(ruta_destino, r_mapa, dp)
+
+
+def fig7_beam_depolarizacion(ruta, frac_pol, dp):
+
+    fig, axs = plt.subplots(1, 2, figsize=(14, 6))
+    im1 = axs[0].imshow(frac_pol, cmap="viridis", origin="lower")
+    axs[0].set_title("Fracción de polarización observada", fontsize=13)
+    plt.colorbar(im1, ax=axs[0], label="P/I")
+    im2 = axs[1].imshow(dp, cmap="inferno", origin="lower", vmin=0.0, vmax=1.0)
+    axs[1].set_title("Depolarización por beam", fontsize=13)
+    plt.colorbar(im2, ax=axs[1], label="DP")
+    plt.tight_layout()
+    plt.savefig(os.path.join(ruta, "figura_7_beam_depolarizacion.png"), dpi=300)
+    plt.close()
+
+
+def perfil_radial_medio(mapa, r_mapa, n_bins=32):
+
+    bins = np.linspace(0, r_mapa.max(), n_bins)
+
+    bc = (bins[:-1] + bins[1:]) / 2
+
+    perfil = []
+
+    for i in range(len(bins) - 1):
+
+        mask = (r_mapa >= bins[i]) & (r_mapa < bins[i + 1])
+        if np.any(mask):
+            perfil.append(np.mean(mapa[mask]))
+        else:
+            perfil.append(0)
+
+    return bc, np.array(perfil)
+
+
+def fig8_perfil_depolarizacion(ruta, r_mapa, dp):
+
+    bc, dp_profile = perfil_radial_medio(dp, r_mapa)
+
+    plt.figure(figsize=(7, 6))
+    plt.plot(bc, dp_profile, "k-", lw=2)
+    plt.xlabel("Distancia (kpc)", fontsize=12)
+    plt.ylabel("DP", fontsize=12)
+    plt.title("Perfil radial de depolarización", fontsize=14)
+    plt.grid(True, alpha=0.3)
+    plt.savefig(os.path.join(ruta, "figura_8_perfil_depolarizacion.png"), dpi=300)
+    plt.close()

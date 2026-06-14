@@ -16,3 +16,6 @@ P_SPEC = 3.0
 NU = 1.4e9
 C = 3e8
 LAMBDA_ONDA = C / NU
+
+#para el observatorio
+BEAM_FWHM_KPC = 50.0
