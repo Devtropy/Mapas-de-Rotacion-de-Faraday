@@ -11,7 +11,7 @@ def calcular_mapas_polarizacion(Bx, By, Bz, j_nu, ne):
     )
     psi_obs = psi_0 + rm_acumulada * (cfg.LAMBDA_ONDA_M**2)
 
-    Q_tot = cp.sum((fp * j_nu) * cp.cos(2 * psi_obs) * cfg.DX_BASE, axis=2)
-    U_tot = cp.sum((fp * j_nu) * cp.sin(2 * psi_obs) * cfg.DX_BASE, axis=2)
+    Q_tot = cp.sum((fp * j_nu) * cp.cos(2 * psi_obs) * cfg.DX_BASE_KPC, axis=2)
+    U_tot = cp.sum((fp * j_nu) * cp.sin(2 * psi_obs) * cfg.DX_BASE_KPC, axis=2)
 
     return Q_tot, U_tot
