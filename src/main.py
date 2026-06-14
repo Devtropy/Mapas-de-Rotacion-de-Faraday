@@ -22,7 +22,7 @@ def ejecutar_simulacion(n_val, b0_val, ruta_destino):
     xx, yy, zz = cp.meshgrid(eje, eje, eje, indexing="ij")
     r = cp.sqrt(xx**2 + yy**2 + zz**2)
 
-    ne = (cfg.N0_VAL * (1.0 + (r / cfg.RC_KPC) ** 2) ** (-1.5 * cfg.BETA)).astype(
+    ne = (cfg.N0_CM3 * (1.0 + (r / cfg.RC_KPC) ** 2) ** (-1.5 * cfg.BETA)).astype(
         cp.float32
     )
     ne_rel = ne * 0.01
