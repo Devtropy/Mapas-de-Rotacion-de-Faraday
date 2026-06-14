@@ -1,6 +1,6 @@
 import cupy as cp
 from cupyx.scipy.fft import fftn, ifftn
-import config as cfg
+import config_values as cfg
 
 
 def generar_capa_campo(n, dx):
@@ -8,8 +8,8 @@ def generar_capa_campo(n, dx):
     kx, ky, kz = cp.meshgrid(k_vec, k_vec, k_vec, indexing="ij")
     k_mag = cp.sqrt(kx**2 + ky**2 + kz**2)
 
-    k_min = cp.pi / cfg.LAMBDA_MAX
-    k_max = cp.pi / cfg.LAMBDA_MIN
+    k_min = cp.pi / cfg.LAMBDA_MAX_KPC
+    k_max = cp.pi / cfg.LAMBDA_MIN_KPC
 
     zeta = cfg.N_SPEC + 2.0
     k_safe = cp.where(k_mag == 0, 1e-20, k_mag)
@@ -44,21 +44,21 @@ def verificar_divergencia(bx, by, bz, dx, etiqueta="Campo"):
     return div_B
 
 def obtener_malla_amr():
-    bx_b, by_b, bz_b = generar_capa_campo(cfg.N_BASE, cfg.DX_BASE)
+    bx_b, by_b, bz_b = generar_capa_campo(cfg.N_BASE, cfg.DX_BASE_KPC)
     b_rms_b = cp.sqrt(cp.mean(bx_b**2 + by_b**2 + bz_b**2))
     bx_b, by_b, bz_b = bx_b / b_rms_b, by_b / b_rms_b, bz_b / b_rms_b
 
-    bx_r, by_r, bz_r = generar_capa_campo(cfg.N_REFINADO, cfg.DX_REFINADO)
+    bx_r, by_r, bz_r = generar_capa_campo(cfg.N_REFINADO, cfg.DX_REFINADO_KPC)
     b_rms_r = cp.sqrt(cp.mean(bx_r**2 + by_r**2 + bz_r**2))
     bx_r, by_r, bz_r = bx_r / b_rms_r, by_r / b_rms_r, bz_r / b_rms_r
 
-    eje = cp.linspace(-cfg.N_BASE / 2, cfg.N_BASE / 2, cfg.N_BASE) * cfg.DX_BASE
+    eje = cp.linspace(-cfg.N_BASE / 2, cfg.N_BASE / 2, cfg.N_BASE) * cfg.DX_BASE_KPC
     xx, yy, zz = cp.meshgrid(eje, eje, eje, indexing="ij")
     r = cp.sqrt(xx**2 + yy**2 + zz**2)
 
-    ancho_transicion = cfg.DX_BASE * 2.0
+    ancho_transicion = cfg.DX_BASE_KPC * 2.0
 
-    peso_refinado = 1.0 / (1.0 + cp.exp((r - cfg.RADIO_REFINAMIENTO) / ancho_transicion))
+    peso_refinado = 1.0 / (1.0 + cp.exp((r - cfg.RADIO_REFINAMIENTO_KPC) / ancho_transicion))
     peso_base = 1.0 - peso_refinado
 
     def refinar_suave(base, refinado):
@@ -74,6 +74,6 @@ def obtener_malla_amr():
     by_final = refinar_suave(by_b, by_r)
     bz_final = refinar_suave(bz_b, bz_r)
     
-    verificar_divergencia(bx_final, by_final, bz_final, cfg.DX_BASE, etiqueta="Malla AMR Suavizada")
+    verificar_divergencia(bx_final, by_final, bz_final, cfg.DX_BASE_KPC, etiqueta="Malla AMR Suavizada")
 
     return bx_final, by_final, bz_final, r

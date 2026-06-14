@@ -1,6 +1,6 @@
 import cupy as cp
 import os
-import config as cfg
+import config_values as cfg
 from grid import generar_capa_campo
 from simulation.faraday import calcular_sincrotron
 from simulation.Polaridad import calcular_mapas_polarizacion
@@ -9,27 +9,26 @@ from visualizer import generar_graficos_estudio
 
 def ejecutar_simulacion(n_val, b0_val, ruta_destino):
     cfg.N_SPEC = n_val
-    cfg.B0 = b0_val
+    b0_mg = b0_val
 
-    bx, by, bz = generar_capa_campo(cfg.N_BASE, cfg.DX_BASE)
+    bx, by, bz = generar_capa_campo(cfg.N_BASE, cfg.DX_BASE_KPC)
 
     b_rms = cp.sqrt(cp.mean(bx**2 + by**2 + bz**2))
-    bx *= cfg.B0 / b_rms
-    by *= cfg.B0 / b_rms
-    bz *= cfg.B0 / b_rms
+    bx *= b0_mg / b_rms
+    by *= b0_mg / b_rms
+    bz *= b0_mg / b_rms
 
-    eje = cp.linspace(-cfg.N_BASE / 2, cfg.N_BASE / 2, cfg.N_BASE) * cfg.DX_BASE
+    eje = cp.linspace(-cfg.N_BASE / 2, cfg.N_BASE / 2, cfg.N_BASE) * cfg.DX_BASE_KPC
     xx, yy, zz = cp.meshgrid(eje, eje, eje, indexing="ij")
     r = cp.sqrt(xx**2 + yy**2 + zz**2)
 
-    ne = (cfg.N0 * (1.0 + (r / cfg.RC) ** 2) ** (-1.5 * cfg.BETA)).astype(cp.float32)
+    ne = (cfg.N0_VAL * (1.0 + (r / cfg.RC_KPC) ** 2) ** (-1.5 * cfg.BETA)).astype(cp.float32)
     ne_rel = ne * 0.01
 
     i_map, j_nu = calcular_sincrotron(bx, by, ne_rel)
     q_map, u_map = calcular_mapas_polarizacion(bx, by, bz, j_nu, ne)
 
-    dx_pc = cfg.DX_BASE * 1000.0
-    rm_map = cp.sum(0.812 * ne * bz * dx_pc, axis=2)
+    rm_map = cp.sum(0.812 * ne * bz * cfg.DX_BASE_PC, axis=2)
 
     os.makedirs(ruta_destino, exist_ok=True)
     cp.save(os.path.join(ruta_destino, "rm_mapa.npy"), rm_map.get())
