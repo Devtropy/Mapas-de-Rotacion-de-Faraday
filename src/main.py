@@ -53,3 +53,6 @@ def estudio_parametrico():
             ruta = os.path.join("../results/estudio_parametrico", nombre_carpeta)
             print(f"Iniciando: n={n}, B0={b0}")
             ejecutar_simulacion(n, b0, ruta)
+
+if __name__="__main__":
+    estudio_parametrico()
