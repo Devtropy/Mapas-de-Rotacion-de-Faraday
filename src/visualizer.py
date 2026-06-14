@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import config as cfg
+import config_values as cfg
 from scipy.special import gamma
 
 
