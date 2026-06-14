@@ -175,7 +175,7 @@ def generar_graficos_estudio(ruta_destino):
     fig5_despolarizacion_haz(ruta_destino, bc)
     fig6_analisis_halo_radio(ruta_destino, r_mapa, bc, i_map, q_map, u_map)
 
-    frac_pol = np.load(os.path.join(ruta_destino, "fracion_de_polarizacion.npy"))
+    frac_pol = np.load(os.path.join(ruta_destino, "fraccion_de_polarizacion.npy"))
     dp = np.load(os.path.join(ruta_destino, "depolarizacion.npy"))
     fig7_beam_depolarizacion(ruta_destino, frac_pol, dp)
     fig8_perfil_depolarizacion(ruta_destino, r_mapa, dp)
