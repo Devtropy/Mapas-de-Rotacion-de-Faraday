@@ -118,7 +118,7 @@ def fig5_despolarizacion_haz(ruta, bc):
     plt.close()
 
 
-def fig6_analisis_halo_radio(ruta, r_mapa, bc, i_map, q_map, u_map):
+def fig6_analisis_halo_radio(ruta, r_mapa, bc, bins, i_map, q_map, u_map):
     p_pol = np.sqrt(q_map**2 + u_map**2)
     p_frac = p_pol / (i_map + 1e-10)
     psi = 0.5 * np.arctan2(u_map, q_map)
@@ -150,10 +150,11 @@ def fig6_analisis_halo_radio(ruta, r_mapa, bc, i_map, q_map, u_map):
     plt.colorbar(im, ax=ax1, label="Intensidad Total (I)")
 
     p_prof = [
-        np.mean(p_frac[(r_mapa >= bc[i]) & (r_mapa < bc[i + 1])])
-        for i in range(len(bc) - 1)
+        np.mean(p_frac[(r_mapa >= bins[i]) & (r_mapa < bins[i + 1])])
+        for i in range(len(bins) - 1)
     ]
-    ax2.plot(bc[:-1], np.array(p_prof) * 100, "k-")
+
+    ax2.plot(bc, np.array(p_prof) * 100, "k-")
     ax2.set_ylabel("Polarización (%)", fontsize=12)
     ax2.set_xlabel("Distancia (kpc)", fontsize=12)
     ax2.grid(True, alpha=0.3)
