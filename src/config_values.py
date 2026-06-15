@@ -26,3 +26,7 @@ LAMBDA_ONDA_M = cfg_units.LAMBDA_ONDA.to(u.m).value
 
 # dx en pc para el cálculo de RM
 DX_BASE_PC = cfg_units.DX_BASE.to(u.pc).value
+
+BEAM_ARCSEC_VAL = cfg_units.BEAM_ARCSEC.to(u.arcsec).value
+D_A_MPC_VAL = cfg_units.D_A_MPC.to(u.Mpc).value
+NOISE_RMS_VAL = cfg_units.NOISE_RMS

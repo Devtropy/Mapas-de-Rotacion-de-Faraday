@@ -26,3 +26,7 @@ P_SPEC = 3.0  # Índice de energía de electrones relativistas
 NU = 1.4e9 * u.Hz  # Frecuencia de observación
 C = 3e8 * (u.m / u.s)  # Velocidad de la luz
 LAMBDA_ONDA = C / NU  # Longitud de onda
+
+BEAM_ARCSEC = 15.0 * u.arcsec
+D_A_MPC = 100.0 * u.Mpc
+NOISE_RMS = 1e-6

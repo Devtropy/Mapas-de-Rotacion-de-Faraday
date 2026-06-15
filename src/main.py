@@ -44,45 +44,32 @@ def ejecutar_simulacion(n_val, b0_val, ruta_destino):
         rm_map, i_map, q_map, u_map, cfg.BEAM_FWHM_KPC, cfg.DX_BASE_KPC
     )
 
-    os.makedirs(ruta_destino, exist_ok=True)
-    cp.save(os.path.join(ruta_destino, "rm_mapa.npy"), rm_map.get())
-    cp.save(os.path.join(ruta_destino, "intensidad.npy"), i_map.get())
-    cp.save(os.path.join(ruta_destino, "stokes_q.npy"), q_map.get())
-    cp.save(os.path.join(ruta_destino, "stokes_u.npy"), u_map.get())
+    ruta_datos = os.path.join(ruta_destino, "data")
+    ruta_graficos = os.path.join(ruta_destino, "plots")
+    
+    os.makedirs(ruta_datos, exist_ok=True)
 
-    # para observatorio
-    cp.save(os.path.join(ruta_destino, "rm_mapa_beam.npy"), rm_beam.get())
-    cp.save(os.path.join(ruta_destino, "i_beam.npy"), i_beam.get())
-    cp.save(os.path.join(ruta_destino, "q_beam.npy"), q_beam.get())
-    cp.save(os.path.join(ruta_destino, "u_beam.npy"), u_beam.get())
-    cp.save(os.path.join(ruta_destino, "intensidad_de_polaridad.npy"), p_beam.get())
-    cp.save(os.path.join(ruta_destino, "fraccion_de_polarizacion.npy"), frac_pol.get())
-    cp.save(os.path.join(ruta_destino, "despolarizacion.npy"), dp.get())
+    cp.save(os.path.join(ruta_datos, "rm_mapa.npy"), rm_map.get())
+    cp.save(os.path.join(ruta_datos, "intensidad.npy"), i_map.get())
+    cp.save(os.path.join(ruta_datos, "stokes_q.npy"), q_map.get())
+    cp.save(os.path.join(ruta_datos, "stokes_u.npy"), u_map.get())
+    cp.save(os.path.join(ruta_datos, "rm_mapa_beam.npy"), rm_beam.get())
+    cp.save(os.path.join(ruta_datos, "i_beam.npy"), i_beam.get())
+    cp.save(os.path.join(ruta_datos, "q_beam.npy"), q_beam.get())
+    cp.save(os.path.join(ruta_datos, "u_beam.npy"), u_beam.get())
+    cp.save(os.path.join(ruta_datos, "intensidad_de_polaridad.npy"), p_beam.get())
+    cp.save(os.path.join(ruta_datos, "fraccion_de_polarizacion.npy"), frac_pol.get())
+    cp.save(os.path.join(ruta_datos, "despolarizacion.npy"), dp.get())
 
     del (
-        bx,
-        by,
-        bz,
-        r,
-        ne,
-        ne_rel,
-        j_nu,
-        i_map,
-        q_map,
-        u_map,
-        rm_map,
-        rm_beam,
-        i_beam,
-        q_beam,
-        u_beam,
-        p_beam,
-        frac_pol,
-        dp,
+        bx, by, bz, r, ne, ne_rel, perfil_b, j_nu,
+        i_map, q_map, u_map, rm_map,
+        rm_beam, i_beam, q_beam, u_beam, p_beam, frac_pol, dp,
     )
-    
+
     cp.get_default_memory_pool().free_all_blocks()
 
-    generar_graficos_estudio(ruta_destino)
+    generar_graficos_estudio(ruta_datos, ruta_graficos)
 
 
 def estudio_parametrico():

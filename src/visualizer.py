@@ -163,34 +163,15 @@ def fig6_analisis_halo_radio(ruta, r_mapa, bc, i_map, q_map, u_map):
     plt.close()
 
 
-def generar_graficos_estudio(ruta_destino):
-    rm_map = np.load(os.path.join(ruta_destino, "rm_mapa.npy"))
-    i_map = np.load(os.path.join(ruta_destino, "intensidad.npy"))
-    q_map = np.load(os.path.join(ruta_destino, "stokes_q.npy"))
-    u_map = np.load(os.path.join(ruta_destino, "stokes_u.npy"))
-    r_mapa = obtener_malla_radial(rm_map.shape[0])
-    bc, s_rm, m_rm = binning_radial(rm_map, r_mapa)
-
-    fig1_mapas_rm(ruta_destino, rm_map)
-    fig2_perfiles_radiales(ruta_destino, bc, s_rm, m_rm)
-    fig3_tendencias_normalizadas(ruta_destino)
-    fig4_comparacion_analitica(ruta_destino, bc, s_rm)
-    fig5_despolarizacion_haz(ruta_destino, bc)
-    fig6_analisis_halo_radio(ruta_destino, r_mapa, bc, i_map, q_map, u_map)
-
-    frac_pol = np.load(os.path.join(ruta_destino, "fraccion_de_polarizacion.npy"))
-    dp = np.load(os.path.join(ruta_destino, "despolarizacion.npy"))
-    fig7_beam_depolarizacion(ruta_destino, frac_pol, dp)
-    fig8_perfil_depolarizacion(ruta_destino, r_mapa, dp)
-
-
-def fig7_beam_depolarizacion(ruta, frac_pol, dp):
-
+def fig7_beam_depolarizacion(ruta, frac_pol, dp, i_beam):
+    mask = i_beam < 3.0 * cfg.NOISE_RMS_VAL
+    frac_pol_m = np.ma.masked_where(mask, frac_pol)
+    dp_m = np.ma.masked_where(mask, dp)
     fig, axs = plt.subplots(1, 2, figsize=(14, 6))
-    im1 = axs[0].imshow(frac_pol, cmap="viridis", origin="lower")
+    im1 = axs[0].imshow(frac_pol_m, cmap="viridis", origin="lower", vmin=0.0, vmax=1.0)
     axs[0].set_title("Fracción de polarización observada", fontsize=13)
     plt.colorbar(im1, ax=axs[0], label="P/I")
-    im2 = axs[1].imshow(dp, cmap="inferno", origin="lower", vmin=0.0, vmax=1.0)
+    im2 = axs[1].imshow(dp_m, cmap="inferno", origin="lower", vmin=0.0, vmax=1.0)
     axs[1].set_title("Depolarización por beam", fontsize=13)
     plt.colorbar(im2, ax=axs[1], label="DP")
     plt.tight_layout()
@@ -198,29 +179,17 @@ def fig7_beam_depolarizacion(ruta, frac_pol, dp):
     plt.close()
 
 
-def perfil_radial_medio(mapa, r_mapa, n_bins=32):
-
-    bins = np.linspace(0, r_mapa.max(), n_bins)
-
+def fig8_perfil_depolarizacion(ruta, r_mapa, dp, i_beam):
+    mask = i_beam >= 3.0 * cfg.NOISE_RMS_VAL
+    bins = np.linspace(0, r_mapa.max(), 32)
     bc = (bins[:-1] + bins[1:]) / 2
-
-    perfil = []
-
+    dp_profile = []
     for i in range(len(bins) - 1):
-
-        mask = (r_mapa >= bins[i]) & (r_mapa < bins[i + 1])
-        if np.any(mask):
-            perfil.append(np.mean(mapa[mask]))
+        bin_mask = (r_mapa >= bins[i]) & (r_mapa < bins[i + 1]) & mask
+        if np.any(bin_mask):
+            dp_profile.append(np.mean(dp[bin_mask]))
         else:
-            perfil.append(0)
-
-    return bc, np.array(perfil)
-
-
-def fig8_perfil_depolarizacion(ruta, r_mapa, dp):
-
-    bc, dp_profile = perfil_radial_medio(dp, r_mapa)
-
+            dp_profile.append(0)
     plt.figure(figsize=(7, 6))
     plt.plot(bc, dp_profile, "k-", lw=2)
     plt.xlabel("Distancia (kpc)", fontsize=12)
@@ -229,3 +198,23 @@ def fig8_perfil_depolarizacion(ruta, r_mapa, dp):
     plt.grid(True, alpha=0.3)
     plt.savefig(os.path.join(ruta, "figura_8_perfil_depolarizacion.png"), dpi=300)
     plt.close()
+
+def generar_graficos_estudio(ruta_datos, ruta_graficos):
+    os.makedirs(ruta_graficos, exist_ok=True)
+    rm_map = np.load(os.path.join(ruta_datos, "rm_mapa.npy"))
+    i_map = np.load(os.path.join(ruta_datos, "intensidad.npy"))
+    q_map = np.load(os.path.join(ruta_datos, "stokes_q.npy"))
+    u_map = np.load(os.path.join(ruta_datos, "stokes_u.npy"))
+    r_mapa = obtener_malla_radial(rm_map.shape[0])
+    bc, s_rm, m_rm, bins = binning_radial(rm_map, r_mapa)
+    fig1_mapas_rm(ruta_graficos, rm_map)
+    fig2_perfiles_radiales(ruta_graficos, bc, s_rm, m_rm)
+    fig3_tendencias_normalizadas(ruta_graficos)
+    fig4_comparacion_analitica(ruta_graficos, bc, s_rm)
+    fig5_despolarizacion_haz(ruta_graficos, bc)
+    fig6_analisis_halo_radio(ruta_graficos, r_mapa, bc, bins, i_map, q_map, u_map)
+    frac_pol = np.load(os.path.join(ruta_datos, "fraccion_de_polarizacion.npy"))
+    dp = np.load(os.path.join(ruta_datos, "despolarizacion.npy"))
+    i_beam = np.load(os.path.join(ruta_datos, "i_beam.npy"))
+    fig7_beam_depolarizacion(ruta_graficos, frac_pol, dp, i_beam)
+    fig8_perfil_depolarizacion(ruta_graficos, r_mapa, dp, i_beam)
