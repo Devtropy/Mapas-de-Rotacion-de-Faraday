@@ -39,9 +39,9 @@ def ejecutar_simulacion(n_val, b0_val, ruta_destino):
     q_map, u_map = calcular_mapas_polarizacion(bx, by, bz, j_nu, ne)
 
     rm_map = cp.sum(0.812 * ne * bz * cfg.DX_BASE_PC, axis=2)
-
+    
     rm_beam, i_beam, q_beam, u_beam, p_beam, frac_pol, dp = aplicar_observacion(
-        rm_map, i_map, q_map, u_map, cfg.BEAM_FWHM_KPC, cfg.DX_BASE_KPC
+        rm_map, i_map, q_map, u_map, cfg.BEAM_ARCSEC_VAL, cfg.D_A_MPC_VAL, cfg.DX_BASE_KPC, cfg.NOISE_RMS_VAL
     )
 
     ruta_datos = os.path.join(ruta_destino, "data")
