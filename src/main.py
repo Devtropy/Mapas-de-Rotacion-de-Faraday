@@ -5,8 +5,6 @@ from grid import generar_capa_campo
 from simulation.faraday import calcular_sincrotron
 from simulation.Polaridad import calcular_mapas_polarizacion
 from visualizer import generar_graficos_estudio
-
-# para el observatorio
 from observatorio.beam import aplicar_observacion
 
 
@@ -15,11 +13,10 @@ def ejecutar_simulacion(n_val, b0_val, ruta_destino):
     b0_mg = b0_val
 
     bx, by, bz = generar_capa_campo(cfg.N_BASE, cfg.DX_BASE_KPC)
-
     b_rms = cp.sqrt(cp.mean(bx**2 + by**2 + bz**2))
-    bx *= b0_mg / b_rms
-    by *= b0_mg / b_rms
-    bz *= b0_mg / b_rms
+    bx /= b_rms
+    by /= b_rms
+    bz /= b_rms
 
     eje = cp.linspace(-cfg.N_BASE / 2, cfg.N_BASE / 2, cfg.N_BASE) * cfg.DX_BASE_KPC
     xx, yy, zz = cp.meshgrid(eje, eje, eje, indexing="ij")
@@ -28,14 +25,21 @@ def ejecutar_simulacion(n_val, b0_val, ruta_destino):
     ne = (cfg.N0_CM3 * (1.0 + (r / cfg.RC_KPC) ** 2) ** (-1.5 * cfg.BETA)).astype(
         cp.float32
     )
-    ne_rel = ne * 0.01
+
+    perfil_b = b0_mg * cp.power(ne / cfg.N0_CM3, cfg.MU)
+
+    bx *= perfil_b
+    by *= perfil_b
+    bz *= perfil_b
+
+    ne_rel = cfg.N0_CM3* cp.power(perfil_b / b0_mg, 2)
 
     i_map, j_nu = calcular_sincrotron(bx, by, ne_rel)
+    
     q_map, u_map = calcular_mapas_polarizacion(bx, by, bz, j_nu, ne)
 
     rm_map = cp.sum(0.812 * ne * bz * cfg.DX_BASE_PC, axis=2)
 
-    # para observatorio
     rm_beam, i_beam, q_beam, u_beam, p_beam, frac_pol, dp = aplicar_observacion(
         rm_map, i_map, q_map, u_map, cfg.BEAM_FWHM_KPC, cfg.DX_BASE_KPC
     )
@@ -75,6 +79,7 @@ def ejecutar_simulacion(n_val, b0_val, ruta_destino):
         frac_pol,
         dp,
     )
+    
     cp.get_default_memory_pool().free_all_blocks()
 
     generar_graficos_estudio(ruta_destino)

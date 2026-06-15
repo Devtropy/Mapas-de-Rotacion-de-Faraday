@@ -3,12 +3,15 @@ import config_values as cfg
 
 
 def calcular_mapas_polarizacion(Bx, By, Bz, j_nu, ne):
+
     fp = (cfg.P_SPEC + 1) / (cfg.P_SPEC + 7 / 3)
-    psi_0 = cp.arctan2(Bx, -By)
+
+    psi_0 = cp.arctan2(-Bx, By)
 
     rm_acumulada = cp.flip(
-        cp.cumsum(cp.flip(812.0 * ne * Bz * cfg.DX_BASE_KPC, axis=2), axis=2), axis=2
+        cp.cumsum(cp.flip(812.0 * ne * Bz * cfg.DX_BASE_PC, axis=2), axis=2), axis=2
     )
+    
     psi_obs = psi_0 + rm_acumulada * (cfg.LAMBDA_ONDA_M**2)
 
     Q_tot = cp.sum((fp * j_nu) * cp.cos(2 * psi_obs) * cfg.DX_BASE_KPC, axis=2)

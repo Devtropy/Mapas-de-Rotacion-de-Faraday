@@ -23,11 +23,19 @@ def generar_capa_campo(n, dx):
         amplitud = cp.random.rayleigh(1.0, (n, n, n))
         A_k.append(sigma_k * amplitud * cp.exp(1j * fase))
 
+    ax=ifftn(A_k[0]).real
+    ay=ifftn(A_k[1]).real
+    az=ifftn(A_k[2]).real
+
     bx_k = 1j * (ky * A_k[2] - kz * A_k[1])
     by_k = 1j * (kz * A_k[0] - kx * A_k[2])
     bz_k = 1j * (kx * A_k[1] - ky * A_k[0])
 
-    return ifftn(bx_k).real, ifftn(by_k).real, ifftn(bz_k).real
+    bx=ifftn(bx_k).real
+    by = ifftn(by_k).real
+    bz = ifftn(bz_k).real
+
+    return bx,by,bz,ax,ay,az
 
 def verificar_divergencia(bx, by, bz, dx, etiqueta="Campo"):
 
@@ -44,13 +52,18 @@ def verificar_divergencia(bx, by, bz, dx, etiqueta="Campo"):
     return div_B
 
 def obtener_malla_amr():
-    bx_b, by_b, bz_b = generar_capa_campo(cfg.N_BASE, cfg.DX_BASE_KPC)
-    b_rms_b = cp.sqrt(cp.mean(bx_b**2 + by_b**2 + bz_b**2))
-    bx_b, by_b, bz_b = bx_b / b_rms_b, by_b / b_rms_b, bz_b / b_rms_b
 
-    bx_r, by_r, bz_r = generar_capa_campo(cfg.N_REFINADO, cfg.DX_REFINADO_KPC)
+    bx_b, by_b, bz_b, ax_b, ay_b, az_b = generar_capa_campo(cfg.N_BASE, cfg.DX_BASE_KPC)
+
+    b_rms_b = cp.sqrt(cp.mean(bx_b**2 + by_b**2 + bz_b**2))
+
+    ax_b, ay_b, az_b = ax_b / b_rms_b, ay_b / b_rms_b, az_b / b_rms_b
+
+    bx_r, by_r, bz_r ,ax_r,ay_r,az_r= generar_capa_campo(cfg.N_REFINADO, cfg.DX_REFINADO_KPC)
+
     b_rms_r = cp.sqrt(cp.mean(bx_r**2 + by_r**2 + bz_r**2))
-    bx_r, by_r, bz_r = bx_r / b_rms_r, by_r / b_rms_r, bz_r / b_rms_r
+
+    ax_r, ay_r, az_r = ax_r / b_rms_r, ay_r / b_rms_r, az_r / b_rms_r
 
     eje = cp.linspace(-cfg.N_BASE / 2, cfg.N_BASE / 2, cfg.N_BASE) * cfg.DX_BASE_KPC
     xx, yy, zz = cp.meshgrid(eje, eje, eje, indexing="ij")
@@ -59,6 +72,7 @@ def obtener_malla_amr():
     ancho_transicion = cfg.DX_BASE_KPC * 2.0
 
     peso_refinado = 1.0 / (1.0 + cp.exp((r - cfg.RADIO_REFINAMIENTO_KPC) / ancho_transicion))
+
     peso_base = 1.0 - peso_refinado
 
     def refinar_suave(base, refinado):
@@ -70,10 +84,21 @@ def obtener_malla_amr():
         cropped = temp[start:end, start:end, start:end]
 
         return base * peso_base + cropped * peso_refinado
-    bx_final = refinar_suave(bx_b, bx_r)
-    by_final = refinar_suave(by_b, by_r)
-    bz_final = refinar_suave(bz_b, bz_r)
-    
+
+    ax_final = refinar_suave(ax_b, ax_r)
+    ay_final = refinar_suave(ay_b, ay_r)
+    az_final = refinar_suave(az_b, az_r)
+
+    bx_final = cp.gradient(az_final, cfg.DX_BASE_KPC, axis=1) - cp.gradient(
+        ay_final, cfg.DX_BASE_KPC, axis=2
+    )
+    by_final = cp.gradient(ax_final, cfg.DX_BASE_KPC, axis=2) - cp.gradient(
+        az_final, cfg.DX_BASE_KPC, axis=0
+    )
+    bz_final = cp.gradient(ay_final, cfg.DX_BASE_KPC, axis=0) - cp.gradient(
+        ax_final, cfg.DX_BASE_KPC, axis=1
+    )
+
     verificar_divergencia(bx_final, by_final, bz_final, cfg.DX_BASE_KPC, etiqueta="Malla AMR Suavizada")
 
     return bx_final, by_final, bz_final, r
