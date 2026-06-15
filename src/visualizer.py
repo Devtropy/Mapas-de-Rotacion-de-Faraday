@@ -165,7 +165,7 @@ def fig6_analisis_halo_radio(ruta, r_mapa, bc, bins, i_map, q_map, u_map):
 
 
 def fig7_beam_depolarizacion(ruta, frac_pol, dp, i_beam):
-    mask = i_beam < 3.0 * cfg.NOISE_RMS_VAL
+    mask = i_beam < 0 * cfg.NOISE_RMS_VAL
     frac_pol_m = np.ma.masked_where(mask, frac_pol)
     dp_m = np.ma.masked_where(mask, dp)
     fig, axs = plt.subplots(1, 2, figsize=(14, 6))
