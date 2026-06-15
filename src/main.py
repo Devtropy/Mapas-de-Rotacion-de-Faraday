@@ -12,7 +12,7 @@ def ejecutar_simulacion(n_val, b0_val, ruta_destino):
     cfg.N_SPEC = n_val
     b0_mg = b0_val
 
-    bx, by, bz = generar_capa_campo(cfg.N_BASE, cfg.DX_BASE_KPC)
+    bx, by, bz,_,_,_ = generar_capa_campo(cfg.N_BASE, cfg.DX_BASE_KPC)
     b_rms = cp.sqrt(cp.mean(bx**2 + by**2 + bz**2))
     bx /= b_rms
     by /= b_rms
@@ -46,7 +46,7 @@ def ejecutar_simulacion(n_val, b0_val, ruta_destino):
 
     ruta_datos = os.path.join(ruta_destino, "data")
     ruta_graficos = os.path.join(ruta_destino, "plots")
-    
+
     os.makedirs(ruta_datos, exist_ok=True)
 
     cp.save(os.path.join(ruta_datos, "rm_mapa.npy"), rm_map.get())
