@@ -23,7 +23,7 @@ def binning_radial(mapa, r_mapa, n_bins=32):
         else:
             s_rm.append(0)
             m_rm.append(0)
-    return bc, np.array(s_rm), np.array(m_rm)
+    return bc, np.array(s_rm), np.array(m_rm), bins
 
 
 def fig1_mapas_rm(ruta, rm_map):
