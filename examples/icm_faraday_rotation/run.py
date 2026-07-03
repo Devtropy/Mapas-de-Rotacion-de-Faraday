@@ -29,7 +29,7 @@ def ejecutar_corrida(
     if density_profile is None:
         density_profile = BetaModel(n0=cfg.N0_CM3, r_core=cfg.RC_KPC, beta=cfg.BETA)
 
-    bx, by, bz, ne, ne_rel, r = c eonstruir_escenario(
+    bx, by, bz, ne, ne_rel, r = construir_escenario(
         n_spec, b0_microgauss, density_profile=density_profile, use_gpu=use_gpu
     )
 
@@ -65,4 +65,4 @@ def ejecutar_corrida(
     generar_graficos_estudio(ruta_destino, n_spec=n_spec, b0_microgauss=b0_microgauss)
 
 
-ejecutar_corrida(cfg.n_spec,cfg.b0_microgauss,RUTA_RESULTADOS)
+ejecutar_corrida(cfg.n_spec, cfg.b0_microgauss, RUTA_RESULTADOS)
