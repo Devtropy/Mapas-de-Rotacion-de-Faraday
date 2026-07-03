@@ -2,9 +2,9 @@ import astropy.units as u
 
 # para el observatorio
 BEAM_FWHM = 50.0 * u.kpc
-#Ruido instrumental
-DESV_EST_RUIDO = 0.01 #desviacion estandar del ruido
-AGREGAR_RUIDO = True #Activar o desactivar el ruido
+# Ruido instrumental
+DESV_EST_RUIDO = 0.01 #Desviacion estandar del ruido, osea el tamaño
+AGREGAR_RUIDO = True #Activacion o desactivacion del ruido
 # Parametros para la malla
 N_BASE = 128  # Adimensional
 N_REFINADO = 256  # Adimensional

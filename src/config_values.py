@@ -21,6 +21,8 @@ B0_MG = cfg_units.B0.to(u.microgauss).value
 LAMBDA_MIN_KPC = cfg_units.LAMBDA_MIN.to(u.kpc).value
 LAMBDA_MAX_KPC = cfg_units.LAMBDA_MAX.to(u.kpc).value
 BEAM_FWHM_KPC = cfg_units.BEAM_FWHM.to(u.kpc).value
+DESV_EST_RUIDO = cfg_units.DESV_EST_RUIDO
+AGREGAR_RUIDO = cfg_units.AGREGAR_RUIDO
 NU_HZ = cfg_units.NU.to(u.Hz).value
 LAMBDA_ONDA_M = cfg_units.LAMBDA_ONDA.to(u.m).value
 
