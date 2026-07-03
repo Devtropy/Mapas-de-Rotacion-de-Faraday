@@ -63,3 +63,6 @@ def ejecutar_corrida(
     )
 
     generar_graficos_estudio(ruta_destino, n_spec=n_spec, b0_microgauss=b0_microgauss)
+
+
+ejecutar_corrida()
