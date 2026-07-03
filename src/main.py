@@ -55,26 +55,7 @@ def ejecutar_simulacion(n_val, b0_val, ruta_destino):
     cp.save(os.path.join(ruta_destino, "fraccion_de_polarizacion.npy"), frac_pol.get())
     cp.save(os.path.join(ruta_destino, "despolarizacion.npy"), dp.get())
 
-    del (
-        bx,
-        by,
-        bz,
-        r,
-        ne,
-        ne_rel,
-        j_nu,
-        i_map,
-        q_map,
-        u_map,
-        rm_map,
-        rm_beam,
-        i_beam,
-        q_beam,
-        u_beam,
-        p_beam,
-        frac_pol,
-        dp,
-    )
+    del (bx, by, bz, r, ne, ne_rel, j_nu, i_map, q_map, u_map, rm_map, rm_beam, i_beam, q_beam, u_beam, p_beam, frac_pol, dp,)
     cp.get_default_memory_pool().free_all_blocks()
 
     generar_graficos_estudio(ruta_destino)
