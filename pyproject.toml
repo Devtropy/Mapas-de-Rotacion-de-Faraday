@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "faradaymr"
+version = "0.2.0"
+description = "Framework para simular observaciones de radioastronomía (RM de Faraday, polarización sincrotrón) de plasmas magnetizados."
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "scipy",
+    "astropy",
+]
+
+[project.optional-dependencies]
+gpu = ["cupy"]
+dev = ["pytest", "matplotlib"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
