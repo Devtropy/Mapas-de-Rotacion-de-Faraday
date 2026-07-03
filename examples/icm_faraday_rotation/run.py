@@ -65,4 +65,4 @@ def ejecutar_corrida(
     generar_graficos_estudio(ruta_destino, n_spec=n_spec, b0_microgauss=b0_microgauss)
 
 
-ejecutar_corrida(cfg.n_spec, cfg.b0_microgauss, RUTA_RESULTADOS)
+ejecutar_corrida(cfg.N_SPEC, cfg.B0_MG, RUTA_RESULTADOS)
