@@ -60,10 +60,16 @@ def aplicar_observacion( rm_map, i_map, q_map, u_map, fwhm_kpc, pixel_size_kpc):
 
     if cfg.AGREGAR_RUIDO:
 
-        rm_beam = agregar_ruido_gaussiano(rm_beam, cfg.DESV_EST_RUIDO)
-        i_beam = agregar_ruido_gaussiano( i_beam, cfg.DESV_EST_RUIDO)
-        q_beam = agregar_ruido_gaussiano( q_beam, cfg.DESV_EST_RUIDO)
-        u_beam = agregar_ruido_gaussiano( u_beam, cfg.DESV_EST_RUIDO)
+        sigma_i = cfg.DESV_EST_RUIDO * float(cp.max(i_beam))
+        sigma_rm = cfg.DESV_EST_RUIDO * float(cp.std(rm_beam))
+
+        rm_beam = agregar_ruido_gaussiano(rm_beam, sigma_rm)
+        i_beam = agregar_ruido_gaussiano(i_beam, sigma_i)
+        q_beam = agregar_ruido_gaussiano(q_beam, sigma_i)
+        u_beam = agregar_ruido_gaussiano(u_beam, sigma_i)
+
+    p_beam, frac_pol = calcular_fraccion_polarizacion(i_beam, q_beam, u_beam)
+    dp = calcular_depolarizacion(i_map, q_map, u_map, i_beam, q_beam, u_beam)
 
     p_beam, frac_pol = calcular_fraccion_polarizacion( i_beam, q_beam, u_beam)
     dp = calcular_depolarizacion( i_map, q_map, u_map, i_beam, q_beam, u_beam)
