@@ -11,6 +11,7 @@ from faradaymr import (
     DensityProfile,
     ObservationConfig,
     ObservationPipeline,
+    get_backend,
 )
 from faradaymr.io import save_maps
 
