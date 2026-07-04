@@ -16,7 +16,7 @@ from faradaymr import (
 from faradaymr.io import save_maps
 
 RUTA_RESULTADOS = os.path.join(
-    os.path.dirname(__file__), "..", "..", "results", "estudio_parametrico_icm"
+    os.path.dirname(__file__), "results", "estudio_parametrico_icm"
 )
 
 
