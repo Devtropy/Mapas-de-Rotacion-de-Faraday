@@ -229,7 +229,7 @@ def fig3_tendencias_normalizadas(ruta):
 
 
 def fig7_beam_depolarizacion(ruta, frac_pol, dp):
-   
+
     fig, axs = plt.subplots(1, 2, figsize=(14, 6))
 
     im1 = axs[0].imshow(frac_pol, cmap="viridis", origin="lower")
@@ -267,7 +267,7 @@ def perfil_radial_medio(mapa, r_mapa, n_bins=32):
 
 
 def fig8_perfil_depolarizacion(ruta, r_mapa, dp, frac_pol=None):
-   bc, dp_profile = perfil_radial_medio(dp, r_mapa)
+    bc, dp_profile = perfil_radial_medio(dp, r_mapa)
 
     if frac_pol is not None:
         _, frac_profile = perfil_radial_medio(frac_pol, r_mapa)
