@@ -31,7 +31,8 @@ def ejecutar_corrida(
         density_profile = BetaModel(n0=cfg.N0_CM3, r_core=cfg.RC_KPC, beta=cfg.BETA)
 
     xp = get_backend(use_gpu)
-
+    ruta_absoluta = os.path.abspath(ruta_destino)
+    print("Generando plasma magnetizado (campo turbulento + perfil de densidad)...")
     bx, by, bz, ne, ne_rel, r = construir_escenario(
         n_spec, b0_microgauss, density_profile=density_profile, use_gpu=use_gpu
     )
@@ -47,7 +48,7 @@ def ejecutar_corrida(
     )
     pipeline = ObservationPipeline(config=observacion, xp=xp)
     resultado = pipeline.run(bx, by, bz, ne, ne_rel)
-
+    print(f"Guardando mapas en {ruta_absoluta} ...")
     save_maps(
         ruta_destino,
         {
@@ -66,6 +67,7 @@ def ejecutar_corrida(
     )
 
     generar_graficos_estudio(ruta_destino, n_spec=n_spec, b0_microgauss=b0_microgauss)
+    print(f"Corrida completa. Todo quedó en: {ruta_absoluta}")
 
 
 if __name__ == "__main__":

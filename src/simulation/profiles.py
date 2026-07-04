@@ -1,7 +1,6 @@
 """
 Perfiles radiales de densidad de electrones térmicos.
 
-Perspectiva de físico:
 El plasma que llena un cúmulo de galaxias (o cualquier halo caliente) no
 tiene densidad uniforme: cae con el radio. Distintas familias de objetos, o
 distintos niveles de detalle del mismo objeto, se describen mejor con
@@ -22,19 +21,6 @@ distintas parametrizaciones de esa caída:
   simulación hidrodinámica externa (una tabla (r, n_e) promediada en
   cascarones esféricos), no hay parametrización que ajustar: se interpola.
 
-Justificación de la implementación:
-Antes había una única función (`beta_model`) llamada directamente por quien
-armaba el escenario 3D, lo que ataba la lógica de integración a un modelo de
-densidad específico: para usar otro perfil había que editar el código que
-arma la caja, no solo el que la usa. Se refactoriza a una jerarquía de
-clases con una interfaz común (`DensityProfile.density(r)`), de modo que la
-parte del framework que arma el escenario y lo integra a lo largo de la
-línea de visión reciba un *objeto* de densidad en vez de estar acoplada a
-una fórmula: puede ser un perfil beta, una suma de betas, un NFW, o una
-tabla que viene de otra simulación, sin que el resto del código lo note.
-Cada perfil es una `dataclass` (igual que `GaussianRandomVectorField`) para
-que los parámetros físicos sean explícitos y fáciles de instanciar, en vez
-de un diccionario de configuración sin tipo.
 """
 
 from __future__ import annotations
@@ -126,8 +112,12 @@ class DoubleBetaModel(DensityProfile):
     def density(self, r, xp=None):
         if xp is None:
             import numpy as xp
-        componente_1 = self.n0_1 * (1.0 + (r / self.r_core_1) ** 2) ** (-1.5 * self.beta_1)
-        componente_2 = self.n0_2 * (1.0 + (r / self.r_core_2) ** 2) ** (-1.5 * self.beta_2)
+        componente_1 = self.n0_1 * (1.0 + (r / self.r_core_1) ** 2) ** (
+            -1.5 * self.beta_1
+        )
+        componente_2 = self.n0_2 * (1.0 + (r / self.r_core_2) ** 2) ** (
+            -1.5 * self.beta_2
+        )
         return componente_1 + componente_2
 
 

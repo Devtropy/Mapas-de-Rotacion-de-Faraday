@@ -30,14 +30,6 @@ supernova, etc.):
    *desde cada punto hasta el observador*, no con la RM total de la línea de
    visión completa.
 
-Justificación de la implementación:
-Las tres cantidades comparten la misma estructura (una suma sobre el eje de
-línea de visión, multiplicada por el tamaño de celda), así que se separan
-en funciones independientes y pequeñas en vez de una única función
-monolítica "calcula todo". Esto permite, por ejemplo, calcular solo RM sin
-necesidad de una población de electrones relativistas (útil en fuentes de
-fondo polarizadas donde no hay sincrotrón local), que es un caso de uso real
-en radioastronomía además del estudio del ICM.
 """
 
 from __future__ import annotations
