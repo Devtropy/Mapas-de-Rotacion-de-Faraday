@@ -45,7 +45,7 @@ def ejecutar_corrida(
         beam_fwhm=cfg.BEAM_FWHM_KPC,
         noise_sigma=cfg.DESV_EST_RUIDO if cfg.AGREGAR_RUIDO else None,
     )
-    pipeline = ObservationPipeline(config=observacion)
+    pipeline = ObservationPipeline(config=observacion, xp=xp)
     resultado = pipeline.run(bx, by, bz, ne, ne_rel)
 
     save_maps(
@@ -66,6 +66,3 @@ def ejecutar_corrida(
     )
 
     generar_graficos_estudio(ruta_destino, n_spec=n_spec, b0_microgauss=b0_microgauss)
-
-
-ejecutar_corrida(cfg.N_SPEC, cfg.B0_MG, RUTA_RESULTADOS)
