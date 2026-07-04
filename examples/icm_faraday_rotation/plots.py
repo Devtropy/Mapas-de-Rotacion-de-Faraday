@@ -153,7 +153,7 @@ def fig6_analisis_halo_radio(ruta, r_mapa, bc, i_map, q_map, u_map):
 
 
 def fig3_tendencias_normalizadas(ruta):
-   dx = cfg.DX_BASE_KPC
+    dx = cfg.DX_BASE_KPC
     n_malla = max(cfg.N_BASE, int(np.ceil(2.0 * cfg.LAMBDA_MAX_KPC / dx)))
     lado_caja = n_malla * dx
     l_max_max_valido = lado_caja / 2.0
