@@ -66,3 +66,11 @@ def ejecutar_corrida(
     )
 
     generar_graficos_estudio(ruta_destino, n_spec=n_spec, b0_microgauss=b0_microgauss)
+
+
+if __name__ == "__main__":
+    ejecutar_corrida(
+        n_spec=cfg.N_SPEC,
+        b0_microgauss=cfg.B0_MG,
+        ruta_destino=RUTA_RESULTADOS,
+    )
