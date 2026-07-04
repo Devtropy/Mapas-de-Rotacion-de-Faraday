@@ -66,69 +66,6 @@ def fig2_perfiles_radiales(ruta, bc, s_rm, m_rm):
     plt.close()
 
 
-def fig3_tendencias_normalizadas(ruta):
-
-    n_malla = min(cfg.N_BASE, 24)
-    dx = cfg.DX_BASE_KPC
-    l_max_valores = np.geomspace(4 * cfg.LAMBDA_MIN_KPC, cfg.LAMBDA_MAX_KPC, 6)
-    n_spec_valores = [2.0, 3.0, 4.0]
-    estilos = {2.0: "b-", 3.0: "k-", 4.0: "r--"}
-
-    perfil_beta = BetaModel(n0=cfg.N0_CM3, r_core=cfg.RC_KPC, beta=cfg.BETA)
-    eje = np.linspace(-n_malla / 2, n_malla / 2, n_malla) * dx
-    xx, yy, zz = np.meshgrid(eje, eje, eje, indexing="ij")
-    r = np.sqrt(xx**2 + yy**2 + zz**2)
-    ne = perfil_beta.density(r, xp=np)
-
-    fig, axs = plt.subplots(1, 3, figsize=(18, 5))
-
-    for n_spec in n_spec_valores:
-        sigmas, medias = [], []
-        for l_max in l_max_valores:
-            campo = GaussianRandomVectorField(
-                n=n_malla,
-                dx=dx,
-                spectral_index=n_spec,
-                scale_min=cfg.LAMBDA_MIN_KPC,
-                scale_max=l_max,
-            )
-            bx, by, bz = campo.sample(use_gpu=False, rng=np.random.RandomState(0))
-            bx, by, bz = GaussianRandomVectorField.normalize_to_rms(
-                bx, by, bz, cfg.B0_MG, xp=np
-            )
-            rm = faradaymr_los.rotation_measure(ne, bz, cfg.DX_BASE_PC, xp=np)
-            sigmas.append(np.std(rm))
-            medias.append(np.abs(np.mean(rm)))
-        sigmas = np.array(sigmas)
-        medias = np.array(medias)
-        estilo = estilos[n_spec]
-        etiqueta = f"n={n_spec:.0f}"
-
-        axs[0].plot(l_max_valores, sigmas / sigmas[-1], estilo, label=etiqueta)
-        axs[1].plot(
-            l_max_valores, medias / (medias[-1] + 1e-30), estilo, label=etiqueta
-        )
-        axs[2].plot(l_max_valores, medias / (sigmas + 1e-30), estilo, label=etiqueta)
-
-    axs[0].set_ylabel(
-        r"$\sigma_{RM}$ (normalizado a $\Lambda_{max}$ mayor)", fontsize=12
-    )
-    axs[1].set_ylabel(r"$|\langle RM \rangle|$ (normalizado)", fontsize=12)
-    axs[2].set_ylabel(r"$|\langle RM \rangle| / \sigma_{RM}$", fontsize=12)
-    for ax in axs:
-        ax.set_xscale("log")
-        ax.set_xlabel(r"$\Lambda_{max}$ (kpc)", fontsize=12)
-        ax.legend()
-        ax.grid(True, which="both", linestyle="--", alpha=0.5)
-
-    plt.suptitle(
-        r"Tendencias de RM con la escala de inyección de la turbulencia ($\Lambda_{max}$)",
-        fontsize=15,
-    )
-    plt.savefig(os.path.join(ruta, "figura_3.png"))
-    plt.close()
-
-
 def fig4_comparacion_analitica(ruta, bc, s_rm, b0_microgauss):
     k = 441.0
     an = (
@@ -215,14 +152,100 @@ def fig6_analisis_halo_radio(ruta, r_mapa, bc, i_map, q_map, u_map):
     plt.close()
 
 
+def fig3_tendencias_normalizadas(ruta):
+   dx = cfg.DX_BASE_KPC
+    n_malla = max(cfg.N_BASE, int(np.ceil(2.0 * cfg.LAMBDA_MAX_KPC / dx)))
+    lado_caja = n_malla * dx
+    l_max_max_valido = lado_caja / 2.0
+
+    if cfg.LAMBDA_MAX_KPC > l_max_max_valido:
+        print(
+            f"[fig3] Aviso: LAMBDA_MAX_KPC={cfg.LAMBDA_MAX_KPC:.0f} kpc excede la "
+            f"mitad de la caja disponible ({l_max_max_valido:.0f} kpc); se recorta "
+            "el barrido a ese valor para no medir un artefacto de tamano finito "
+            "de grilla en vez de fisica real."
+        )
+
+    l_max_valores = np.geomspace(
+        4 * cfg.LAMBDA_MIN_KPC, min(cfg.LAMBDA_MAX_KPC, l_max_max_valido), 6
+    )
+    n_spec_valores = [2.0, 3.0, 4.0]
+    estilos = {2.0: "b-", 3.0: "k-", 4.0: "r--"}
+
+    perfil_beta = BetaModel(n0=cfg.N0_CM3, r_core=cfg.RC_KPC, beta=cfg.BETA)
+    eje = np.linspace(-n_malla / 2, n_malla / 2, n_malla) * dx
+    xx, yy, zz = np.meshgrid(eje, eje, eje, indexing="ij")
+    r = np.sqrt(xx**2 + yy**2 + zz**2)
+    ne = perfil_beta.density(r, xp=np)
+
+    fig, axs = plt.subplots(1, 3, figsize=(18, 5))
+
+    for n_spec in n_spec_valores:
+        sigmas, medias = [], []
+        for l_max in l_max_valores:
+            campo = GaussianRandomVectorField(
+                n=n_malla,
+                dx=dx,
+                spectral_index=n_spec,
+                scale_min=cfg.LAMBDA_MIN_KPC,
+                scale_max=l_max,
+            )
+            bx, by, bz = campo.sample(use_gpu=True, rng=np.random.RandomState(0))
+            bx, by, bz = GaussianRandomVectorField.normalize_to_rms(
+                bx, by, bz, cfg.B0_MG, xp=xp
+            )
+            rm = faradaymr_los.rotation_measure(ne, bz, cfg.DX_BASE_PC, xp=xp)
+            sigmas.append(np.std(rm))
+            medias.append(np.abs(np.mean(rm)))
+        sigmas = np.array(sigmas)
+        medias = np.array(medias)
+        estilo = estilos[n_spec]
+        etiqueta = f"n={n_spec:.0f}"
+
+        axs[0].plot(l_max_valores, sigmas / sigmas[-1], estilo, label=etiqueta)
+        axs[1].plot(
+            l_max_valores, medias / (medias[-1] + 1e-30), estilo, label=etiqueta
+        )
+        axs[2].plot(l_max_valores, medias / (sigmas + 1e-30), estilo, label=etiqueta)
+
+    axs[0].set_ylabel(
+        r"$\sigma_{RM}$ (normalizado a $\Lambda_{max}$ mayor)", fontsize=12
+    )
+    axs[1].set_ylabel(r"$|\langle RM \rangle|$ (normalizado)", fontsize=12)
+    axs[2].set_ylabel(r"$|\langle RM \rangle| / \sigma_{RM}$", fontsize=12)
+    for ax in axs:
+        ax.set_xscale("log")
+        ax.set_xlabel(r"$\Lambda_{max}$ (kpc)", fontsize=12)
+        ax.legend()
+        ax.grid(True, which="both", linestyle="--", alpha=0.5)
+
+    plt.suptitle(
+        r"Tendencias de RM con la escala de inyección de la turbulencia ($\Lambda_{max}$)"
+        f"\n(caja = {lado_caja:.0f} kpc, N={n_malla})",
+        fontsize=14,
+    )
+    plt.savefig(os.path.join(ruta, "figura_3.png"))
+    plt.close()
+
+
 def fig7_beam_depolarizacion(ruta, frac_pol, dp):
+   
     fig, axs = plt.subplots(1, 2, figsize=(14, 6))
+
     im1 = axs[0].imshow(frac_pol, cmap="viridis", origin="lower")
-    axs[0].set_title("Fracción de polarización observada", fontsize=13)
+    axs[0].set_title("Fracción de polarización observada (P/I, con beam)", fontsize=13)
     plt.colorbar(im1, ax=axs[0], label="P/I")
-    im2 = axs[1].imshow(dp, cmap="inferno", origin="lower", vmin=0.0, vmax=1.0)
-    axs[1].set_title("Depolarización por beam", fontsize=13)
+
+    dp_max_valido = np.nanpercentile(dp, 99) if np.any(np.isfinite(dp)) else 1.0
+    im2 = axs[1].imshow(
+        dp, cmap="inferno", origin="lower", vmin=0.0, vmax=max(1.0, dp_max_valido)
+    )
+    axs[1].set_title(
+        "Despolarización por beam (blanco = canal de Faraday enmascarado)",
+        fontsize=12,
+    )
     plt.colorbar(im2, ax=axs[1], label="DP")
+
     plt.tight_layout()
     plt.savefig(os.path.join(ruta, "figura_7_beam_depolarizacion.png"), dpi=300)
     plt.close()
@@ -234,21 +257,44 @@ def perfil_radial_medio(mapa, r_mapa, n_bins=32):
     perfil = []
     for i in range(len(bins) - 1):
         mask = (r_mapa >= bins[i]) & (r_mapa < bins[i + 1])
-        if np.any(mask):
-            perfil.append(np.mean(mapa[mask]))
+        valores = mapa[mask]
+        valores = valores[np.isfinite(valores)]
+        if valores.size > 0:
+            perfil.append(np.mean(valores))
         else:
-            perfil.append(0)
+            perfil.append(np.nan)
     return bc, np.array(perfil)
 
 
-def fig8_perfil_depolarizacion(ruta, r_mapa, dp):
-    bc, dp_profile = perfil_radial_medio(dp, r_mapa)
-    plt.figure(figsize=(7, 6))
-    plt.plot(bc, dp_profile, "k-", lw=2)
-    plt.xlabel("Distancia (kpc)", fontsize=12)
-    plt.ylabel("DP", fontsize=12)
-    plt.title("Perfil radial de depolarización", fontsize=14)
-    plt.grid(True, alpha=0.3)
+def fig8_perfil_depolarizacion(ruta, r_mapa, dp, frac_pol=None):
+   bc, dp_profile = perfil_radial_medio(dp, r_mapa)
+
+    if frac_pol is not None:
+        _, frac_profile = perfil_radial_medio(frac_pol, r_mapa)
+        fig, axs = plt.subplots(1, 2, figsize=(14, 6))
+        axs[0].plot(bc, dp_profile, "k-", lw=2)
+        axs[0].set_xlabel("Distancia (kpc)", fontsize=12)
+        axs[0].set_ylabel("DP (canales enmascarados)", fontsize=12)
+        axs[0].set_title("Perfil radial de despolarización", fontsize=13)
+        axs[0].grid(True, alpha=0.3)
+
+        axs[1].plot(bc, frac_profile * 100, "k-", lw=2)
+        axs[1].set_xlabel("Distancia (kpc)", fontsize=12)
+        axs[1].set_ylabel("Polarización con beam (%)", fontsize=12)
+        axs[1].set_title(
+            "Perfil radial de P/I con beam\n(diagnóstico equivalente a Fig. 6 del artículo)",
+            fontsize=12,
+        )
+        axs[1].grid(True, alpha=0.3)
+        plt.tight_layout()
+    else:
+        plt.figure(figsize=(7, 6))
+        plt.plot(bc, dp_profile, "k-", lw=2)
+        plt.xlabel("Distancia (kpc)", fontsize=12)
+        plt.ylabel("DP", fontsize=12)
+        plt.title("Perfil radial de depolarización", fontsize=14)
+        plt.grid(True, alpha=0.3)
+
     plt.savefig(os.path.join(ruta, "figura_8_perfil_depolarizacion.png"), dpi=300)
     plt.close()
 
