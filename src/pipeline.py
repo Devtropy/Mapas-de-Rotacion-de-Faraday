@@ -16,6 +16,7 @@ que se simule (cúmulo de galaxias, halo de una galaxia, resto de supernova):
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -27,6 +28,9 @@ from .instrument import (
     depolarization,
     polarization_fraction,
 )
+from .logging_config import medir_tiempo_kernel
+
+_logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -80,9 +84,11 @@ class ObservationPipeline:
 
             self.xp = xp
 
+    @medir_tiempo_kernel
     def run(self, bx, by, bz, ne, ne_rel) -> ObservationResult:
         xp = self.xp
         cfg = self.config
+        _logger.info("Integrando línea de visión (RM, I, Q, U)...")
 
         # B_perp = |B|*sin(alpha), con alpha el ángulo entre el campo local
         # y la línea de visión (eje z de la caja), calculado explícitamente
@@ -119,6 +125,11 @@ class ObservationPipeline:
         return result
 
     def _apply_instrument(self, result: ObservationResult, cfg: ObservationConfig):
+        _logger.info(
+            "Aplicando respuesta instrumental (beam=%.4g, ruido=%s)...",
+            cfg.beam_fwhm,
+            cfg.noise_sigma is not None,
+        )
         xp = self.xp
         pixel_size = cfg.pixel_size
 

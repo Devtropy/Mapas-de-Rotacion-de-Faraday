@@ -11,6 +11,7 @@ instrumental- es independiente del objeto astrofísico que se estudie.
 
 from .backend import get_backend, to_numpy
 from .fields import GaussianRandomVectorField
+from .logging_config import configurar_logging, generar_id_simulacion, medir_tiempo_kernel
 from .simulation import (
     BetaModel,
     DensityProfile,
@@ -34,6 +35,9 @@ __all__ = [
     "ObservationConfig",
     "ObservationPipeline",
     "ObservationResult",
+    "configurar_logging",
+    "generar_id_simulacion",
+    "medir_tiempo_kernel",
 ]
 
 __version__ = "0.2.0"

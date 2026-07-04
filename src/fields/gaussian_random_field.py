@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 from dataclasses import dataclass
 from typing import Callable, Optional, Tuple
@@ -35,6 +36,12 @@ from typing import Callable, Optional, Tuple
 import numpy as _np
 
 from ..backend import get_backend, to_numpy
+from ..logging_config import medir_tiempo_kernel
+
+# Logger propio de este módulo (hijo de "faradaymr.fields" en la jerarquía
+# de logging); ver `faradaymr.logging_config` para la justificación de por
+# qué se usa logging en vez de print() en todo el framework.
+_logger = logging.getLogger(__name__)
 
 
 def power_law_spectrum(xp, k_mag, spectral_index, k_min, k_max):
@@ -94,6 +101,7 @@ class GaussianRandomVectorField:
         kx, ky, kz = xp.meshgrid(k_vec, k_vec, k_vec, indexing="ij")
         return kx, ky, kz, xp.sqrt(kx**2 + ky**2 + kz**2)
 
+    @medir_tiempo_kernel
     def sample(self, use_gpu: Optional[bool] = None, rng=None):
         """
         Extrae una realización aleatoria del campo turbulento.
@@ -253,12 +261,21 @@ class GaussianRandomVectorField:
         if not force and os.path.exists(cache_path):
             data = _np.load(cache_path)
             if self._matches(data, seed=seed):
+                _logger.info(
+                    "Malla n=%d encontrada en caché (%s); se omite la FFT.",
+                    self.n,
+                    cache_path,
+                )
                 xp = get_backend(use_gpu)
                 bx, by, bz = data["bx"], data["by"], data["bz"]
                 if xp is not _np:
                     bx, by, bz = xp.asarray(bx), xp.asarray(by), xp.asarray(bz)
                 return bx, by, bz
 
+        _logger.info(
+            "Sin malla en caché para n=%d (o force=True); generando por FFT.",
+            self.n,
+        )
         rng = None
         if seed is not None:
             rng = _np.random.RandomState(seed)

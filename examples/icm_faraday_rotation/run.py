@@ -14,10 +14,12 @@ from faradaymr import (
     get_backend,
 )
 from faradaymr.io import save_maps
+from faradaymr.logging_config import configurar_logging, generar_id_simulacion
 
 RUTA_RESULTADOS = os.path.join(
     os.path.dirname(__file__), "results", "estudio_parametrico_icm"
 )
+RUTA_LOGS = os.path.join(os.path.dirname(__file__), "results", "logs")
 
 
 def ejecutar_corrida(
@@ -27,6 +29,14 @@ def ejecutar_corrida(
     use_gpu=True,
     density_profile: DensityProfile | None = None,
 ):
+    # Un archivo de log por corrida, nombrado con su propio id de
+    # simulación: en un estudio paramétrico (muchos n_spec, muchos B0) esto
+    # es lo que permite después ir de "esta corrida se comportó raro" al
+    # registro exacto de qué pasó en ella, sin mezclarlo con el de las
+    # demás corridas del barrido.
+    id_simulacion = generar_id_simulacion()
+    logger = configurar_logging(directorio_logs=RUTA_LOGS, id_simulacion=id_simulacion)
+
     if density_profile is None:
         density_profile = BetaModel(n0=cfg.N0_CM3, r_core=cfg.RC_KPC, beta=cfg.BETA)
 
@@ -34,7 +44,15 @@ def ejecutar_corrida(
 
     ruta_absoluta = os.path.abspath(ruta_destino)
 
-    print("Generando plasma magnetizado (campo turbulento + perfil de densidad)...")
+    logger.info(
+        "Corrida %s: n_spec=%.3g, B0=%.3g uG, GPU=%s",
+        id_simulacion,
+        n_spec,
+        b0_microgauss,
+        use_gpu,
+    )
+
+    logger.info("Generando plasma magnetizado (campo turbulento + perfil de densidad)...")
     bx, by, bz, ne, ne_rel, r = construir_escenario(
         n_spec, b0_microgauss, density_profile=density_profile, use_gpu=use_gpu
     )
@@ -50,12 +68,9 @@ def ejecutar_corrida(
     )
     pipeline = ObservationPipeline(config=observacion, xp=xp)
 
-    print(
-        "Integrando la línea de visión (RM, Stokes I/Q/U) y aplicando el instrumento..."
-    )
     resultado = pipeline.run(bx, by, bz, ne, ne_rel)
 
-    print(f"Guardando mapas en {ruta_absoluta} ...")
+    logger.info("Guardando mapas en %s ...", ruta_absoluta)
 
     save_maps(
         ruta_destino,
@@ -75,7 +90,7 @@ def ejecutar_corrida(
     )
 
     generar_graficos_estudio(ruta_destino, n_spec=n_spec, b0_microgauss=b0_microgauss)
-    print(f"Corrida completa. Todo quedó en: {ruta_absoluta}")
+    logger.info("Corrida %s completa. Todo quedó en: %s", id_simulacion, ruta_absoluta)
 
 
 if __name__ == "__main__":

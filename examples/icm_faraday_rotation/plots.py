@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 
 import numpy as np
@@ -9,6 +10,11 @@ from scipy.special import gamma
 import config as cfg
 from faradaymr import BetaModel, los as faradaymr_los
 from faradaymr.fields import GaussianRandomVectorField
+
+# Logger hijo del árbol "faradaymr": aunque este script vive fuera del
+# paquete, conceptualmente reporta sobre la misma corrida, así que cuelga
+# de la misma jerarquía en vez de crear un árbol de logging aparte.
+_logger = logging.getLogger("faradaymr.examples.icm_faraday_rotation.plots")
 
 
 def obtener_malla_radial(n):
@@ -159,11 +165,16 @@ def fig3_tendencias_normalizadas(ruta):
     l_max_max_valido = lado_caja / 2.0
 
     if cfg.LAMBDA_MAX_KPC > l_max_max_valido:
-        print(
-            f"[fig3] Aviso: LAMBDA_MAX_KPC={cfg.LAMBDA_MAX_KPC:.0f} kpc excede la "
-            f"mitad de la caja disponible ({l_max_max_valido:.0f} kpc); se recorta "
-            "el barrido a ese valor para no medir un artefacto de tamano finito "
-            "de grilla en vez de fisica real."
+        # WARNING (no INFO): esto no es solo el avance de la corrida, es un
+        # aviso físico -si se ignorara, el barrido mediría un artefacto de
+        # tamaño finito de la grilla y no la física de la turbulencia.
+        _logger.warning(
+            "fig3: LAMBDA_MAX_KPC=%.0f kpc excede la mitad de la caja "
+            "disponible (%.0f kpc); se recorta el barrido a ese valor para "
+            "no medir un artefacto de tamaño finito de grilla en vez de "
+            "física real.",
+            cfg.LAMBDA_MAX_KPC,
+            l_max_max_valido,
         )
 
     l_max_valores = np.geomspace(
