@@ -17,5 +17,14 @@ dependencies = [
 gpu = ["cupy"]
 dev = ["pytest", "matplotlib"]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+
+[tool.setuptools]
+packages = [
+    "faradaymr",
+    "faradaymr.instrument",
+    "faradaymr.fields",
+    "faradaymr.simulation",
+]
+
+[tool.setuptools.package-dir]
+faradaymr = "src"
