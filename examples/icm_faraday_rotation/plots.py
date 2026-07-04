@@ -190,11 +190,11 @@ def fig3_tendencias_normalizadas(ruta):
                 scale_min=cfg.LAMBDA_MIN_KPC,
                 scale_max=l_max,
             )
-            bx, by, bz = campo.sample(use_gpu=True, rng=np.random.RandomState(0))
+            bx, by, bz = campo.sample(use_gpu=False, rng=np.random.RandomState(0))
             bx, by, bz = GaussianRandomVectorField.normalize_to_rms(
-                bx, by, bz, cfg.B0_MG, xp=xp
+                bx, by, bz, cfg.B0_MG, xp=np
             )
-            rm = faradaymr_los.rotation_measure(ne, bz, cfg.DX_BASE_PC, xp=xp)
+            rm = faradaymr_los.rotation_measure(ne, bz, cfg.DX_BASE_PC, xp=np)
             sigmas.append(np.std(rm))
             medias.append(np.abs(np.mean(rm)))
         sigmas = np.array(sigmas)
