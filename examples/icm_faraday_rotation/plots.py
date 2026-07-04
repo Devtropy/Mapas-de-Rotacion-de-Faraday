@@ -92,8 +92,6 @@ def fig3_tendencias_normalizadas(ruta):
                 scale_min=cfg.LAMBDA_MIN_KPC,
                 scale_max=l_max,
             )
-            # Misma semilla para las tres curvas: la única diferencia entre
-            # ellas debe ser n y Lambda_max, no la realización aleatoria.
             bx, by, bz = campo.sample(use_gpu=False, rng=np.random.RandomState(0))
             bx, by, bz = GaussianRandomVectorField.normalize_to_rms(
                 bx, by, bz, cfg.B0_MG, xp=np
@@ -256,9 +254,6 @@ def fig8_perfil_depolarizacion(ruta, r_mapa, dp):
 
 
 def generar_graficos_estudio(ruta_destino, n_spec, b0_microgauss):
-    # n_spec y b0 se piden explícitos (no se infieren del nombre de la
-    # carpeta): son metadatos de la corrida, no algo que deba adivinarse
-    # parseando un string. `run.py` los tiene a mano y los pasa directo.
     rm_map = np.load(os.path.join(ruta_destino, "rm_mapa.npy"))
     i_map = np.load(os.path.join(ruta_destino, "intensidad.npy"))
     q_map = np.load(os.path.join(ruta_destino, "stokes_q.npy"))

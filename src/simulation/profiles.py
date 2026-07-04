@@ -1,6 +1,7 @@
 """
 Perfiles radiales de densidad de electrones térmicos.
 
+Perspectiva de físico:
 El plasma que llena un cúmulo de galaxias (o cualquier halo caliente) no
 tiene densidad uniforme: cae con el radio. Distintas familias de objetos, o
 distintos niveles de detalle del mismo objeto, se describen mejor con
@@ -162,19 +163,12 @@ class TabulatedProfile(DensityProfile):
     promedio en cascarones esféricos de una simulación hidrodinámica (SPH,
     AMR, moving-mesh) en vez de un ajuste analítico.
 
-    Perspectiva de físico: los perfiles beta/doble-beta/NFW son ajustes
+    los perfiles beta/doble-beta/NFW son ajustes
     suaves e idealizados; una simulación hidrodinámica captura estructura
     que esas fórmulas no tienen (grumos, choques, un cool core con forma
     arbitraria). Para usar ese resultado en este framework no hace falta
     ajustarle una fórmula: alcanza con interpolar la tabla directamente.
 
-    Justificación de la implementación:
-    La interpolación se hace en espacio log-log (log10(r) vs log10(n_e)) en
-    vez de lineal, porque n_e(r) típicamente cae varias décadas a lo largo
-    de la tabla; interpolar linealmente en espacio real subestima groseramente
-    la densidad entre puntos de tabla espaciados en log (que es como se
-    suelen tabular estos perfiles). En log-log, un tramo de tabla que sigue
-    una ley de potencia -el caso típico- se interpola exactamente.
 
     Parámetros
     ----------
@@ -228,11 +222,6 @@ class TabulatedProfile(DensityProfile):
 
         from ..backend import to_numpy
 
-        # La interpolación (scipy) solo entiende arreglos de CPU, así que se
-        # trae `r` a numpy si viniera de un backend GPU y se devuelve el
-        # resultado ya reconvertido a `xp` al final: la interfaz sigue
-        # siendo transparente al backend, aunque el cómputo interno no lo
-        # sea (scipy no tiene equivalente en cupy para esta interpolación).
         r_cpu = np.clip(to_numpy(r), 1e-30, None)  # evita log10(0) en r=0
         log_r_consulta = np.log10(r_cpu)
 

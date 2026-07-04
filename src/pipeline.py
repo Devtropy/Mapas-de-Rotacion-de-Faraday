@@ -39,7 +39,8 @@ class ObservationConfig:
     wavelength: float  # longitud de onda correspondiente a `frequency`
     p_index: float  # índice de energía de los electrones relativistas
     beam_fwhm: Optional[float] = None  # None -> no se aplica beam
-    noise_sigma: Optional[float] = None  # None -> no se agrega ruido
+    noise_sigma: Optional[float] = None  # fracción del piso de ruido respecto
+    # a la señal más fuerte de cada mapa (p.ej. 0.01 = 1%); None -> sin ruido
 
 
 @dataclass
@@ -95,7 +96,7 @@ class ObservationPipeline:
 
         psi_0 = los.polarization_angle_intrinsic(bx, by, xp=xp)
         rm_cumulative = los.rotation_measure_cumulative(ne, bz, cfg.pixel_size, xp=xp)
-        # OJO físico: para Q/U la RM acumulada de Faraday usa el mismo tamaño
+        #  para Q/U la RM acumulada de Faraday usa el mismo tamaño
         # de celda que el resto de la caja (pixel_size), no `dl` en pc, salvo
         # que ambos coincidan (ver ejemplo del ICM, donde sí coinciden).
         q_map, u_map = los.stokes_qu(
@@ -127,10 +128,13 @@ class ObservationPipeline:
         )
 
         if cfg.noise_sigma is not None:
-            rm_beam = add_gaussian_noise(rm_beam, cfg.noise_sigma, xp=xp)
-            i_beam = add_gaussian_noise(i_beam, cfg.noise_sigma, xp=xp)
-            q_beam = add_gaussian_noise(q_beam, cfg.noise_sigma, xp=xp)
-            u_beam = add_gaussian_noise(u_beam, cfg.noise_sigma, xp=xp)
+
+            sigma_i = cfg.noise_sigma * float(xp.max(i_beam))
+            sigma_rm = cfg.noise_sigma * float(xp.std(rm_beam))
+            rm_beam = add_gaussian_noise(rm_beam, sigma_rm, xp=xp)
+            i_beam = add_gaussian_noise(i_beam, sigma_i, xp=xp)
+            q_beam = add_gaussian_noise(q_beam, sigma_i, xp=xp)
+            u_beam = add_gaussian_noise(u_beam, sigma_i, xp=xp)
 
         p_beam, frac_pol_beam = polarization_fraction(i_beam, q_beam, u_beam, xp=xp)
         dp = depolarization(
