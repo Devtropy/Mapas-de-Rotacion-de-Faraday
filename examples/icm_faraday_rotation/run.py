@@ -29,6 +29,8 @@ def ejecutar_corrida(
     if density_profile is None:
         density_profile = BetaModel(n0=cfg.N0_CM3, r_core=cfg.RC_KPC, beta=cfg.BETA)
 
+    xp = get_backend(use_gpu)
+
     bx, by, bz, ne, ne_rel, r = construir_escenario(
         n_spec, b0_microgauss, density_profile=density_profile, use_gpu=use_gpu
     )
