@@ -1,6 +1,8 @@
 numpy
 scipy
 matplotlib
+astropy
+h5py
 
 # Opcional: aceleración por GPU (requiere CUDA instalado).
 # cupy
