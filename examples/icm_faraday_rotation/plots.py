@@ -11,6 +11,9 @@ import config as cfg
 from faradaymr import BetaModel, los as faradaymr_los
 from faradaymr.fields import GaussianRandomVectorField
 
+# Logger hijo del árbol "faradaymr": aunque este script vive fuera del
+# paquete, conceptualmente reporta sobre la misma corrida, así que cuelga
+# de la misma jerarquía en vez de crear un árbol de logging aparte.
 _logger = logging.getLogger("faradaymr.examples.icm_faraday_rotation.plots")
 
 

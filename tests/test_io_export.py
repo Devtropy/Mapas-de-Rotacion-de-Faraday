@@ -9,6 +9,10 @@ h5py = pytest.importorskip("h5py")
 
 
 def test_fits_guarda_y_recupera_el_mapa_con_su_escala_espacial(tmp_path):
+    # Lo que de verdad le importa a quien reabra este FITS con DS9 o
+    # astropy es poder saber cuántos kpc mide cada píxel sin tener que
+    # recordar el valor de memoria; por eso se verifica el WCS, no solo
+    # que el arreglo numérico sobreviva al viaje a disco.
     rm_mapa = np.arange(16.0).reshape(4, 4)
     ruta = tmp_path / "rm_mapa.fits"
 
@@ -22,6 +26,8 @@ def test_fits_guarda_y_recupera_el_mapa_con_su_escala_espacial(tmp_path):
 
 
 def test_fits_sin_pixel_size_no_agrega_wcs(tmp_path):
+    # Sin una escala espacial no hay nada físico que poner en el WCS; el
+    # mapa debe poder guardarse igual, solo que sin esas palabras clave.
     mapa = np.ones((3, 3))
     ruta = tmp_path / "sin_wcs.fits"
 
@@ -33,6 +39,10 @@ def test_fits_sin_pixel_size_no_agrega_wcs(tmp_path):
 
 
 def test_hdf5_agrupa_varias_corridas_de_un_estudio_parametrico(tmp_path):
+    # El punto de usar HDF5 en vez de un .npy por mapa por corrida es
+    # justamente poder juntar muchas corridas del barrido paramétrico en
+    # un solo archivo, cada una identificable por sus propios parámetros
+    # físicos (aquí, n_spec y B0) guardados como atributos del grupo.
     ruta = tmp_path / "estudio.h5"
 
     save_hdf5(
@@ -58,6 +68,9 @@ def test_hdf5_agrupa_varias_corridas_de_un_estudio_parametrico(tmp_path):
 
 
 def test_hdf5_reescribe_un_grupo_existente_sin_mezclar_datasets(tmp_path):
+    # Si una corrida se repite (p.ej. se corrigió un parámetro y se volvió
+    # a correr con el mismo id de grupo), no debe quedar un dataset viejo
+    # conviviendo con los nuevos bajo el mismo grupo.
     ruta = tmp_path / "estudio.h5"
 
     save_hdf5(str(ruta), {"i_map": np.zeros((2, 2))}, group="corrida")

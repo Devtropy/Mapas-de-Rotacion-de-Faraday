@@ -1,3 +1,22 @@
+"""
+Estilos de figura consistentes con las normas de una revista.
+
+Cada revista de astronomía (ApJ, A&A) impone un ancho de columna, un tamaño
+de fuente mínimo legible y ciertas convenciones de estilo (marcas hacia
+adentro, ejes con marca arriba y a la derecha además de abajo/izquierda,
+etc.). Rehacer esas decisiones a mano en cada script de graficado del
+estudio paramétrico -y mantenerlas iguales entre todos los scripts- es
+trabajo repetido y una fuente de inconsistencias entre figuras del mismo
+paper. `Plotter` centraliza esas decisiones una sola vez y las aplica de
+forma global a `matplotlib.rcParams`, para que cualquier figura hecha
+después de `aplicar()` -sin importar en qué módulo se dibuje- salga con el
+aspecto correcto sin que ese módulo tenga que saber nada de la revista.
+
+Los anchos de columna (3.5" para ApJ, 88 mm para A&A) y tamaños de fuente
+son los valores estándar publicados en las guías de autor de ambas
+revistas, no un criterio estético arbitrario de esta implementación.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -40,7 +59,29 @@ _ESTILOS = {
 
 
 class Plotter:
-        def __init__(self, estilo: str = "apj"):
+    """
+    Aplica (y restaura) un estilo de publicación de forma global.
+
+    Se implementa como una clase con estado -y no como una función suelta
+    que solo aplica el estilo- porque hace falta poder *volver atrás*: un
+    estudio paramétrico puede necesitar figuras de exploración rápida con
+    el estilo por defecto de matplotlib y, aparte, un puñado de figuras
+    finales con el estilo de la revista; sin un `restaurar()` explícito,
+    el estilo de la revista se quedaría pegado a todas las figuras
+    siguientes de la sesión, incluidas las que no son para el paper.
+
+    Uso directo:
+        plotter = Plotter("apj")
+        plotter.aplicar()
+        ... graficar ...
+        plotter.restaurar()
+
+    O como manejador de contexto, que aplica y restaura automáticamente:
+        with Plotter("aanda"):
+            ... graficar ...
+    """
+
+    def __init__(self, estilo: str = "apj"):
         estilo = estilo.lower()
         if estilo not in _ESTILOS:
             raise ValueError(
@@ -54,7 +95,11 @@ class Plotter:
         """Aplica el estilo globalmente a `matplotlib.rcParams`."""
         import matplotlib as mpl
 
-       self._rcparams_previos = {
+        # Se guardan solo las claves que este estilo va a tocar (no todo
+        # rcParams), porque es lo mínimo necesario para poder revertir
+        # exactamente lo que `aplicar` cambió, sin arrastrar de vuelta el
+        # resto de la configuración de matplotlib del usuario.
+        self._rcparams_previos = {
             clave: mpl.rcParams[clave] for clave in _ESTILOS[self.estilo]
         }
         mpl.rcParams.update(_ESTILOS[self.estilo])

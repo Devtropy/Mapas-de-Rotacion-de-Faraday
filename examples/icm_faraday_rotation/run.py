@@ -29,6 +29,11 @@ def ejecutar_corrida(
     use_gpu=True,
     density_profile: DensityProfile | None = None,
 ):
+    # Un archivo de log por corrida, nombrado con su propio id de
+    # simulación: en un estudio paramétrico (muchos n_spec, muchos B0) esto
+    # es lo que permite después ir de "esta corrida se comportó raro" al
+    # registro exacto de qué pasó en ella, sin mezclarlo con el de las
+    # demás corridas del barrido.
     id_simulacion = generar_id_simulacion()
     logger = configurar_logging(directorio_logs=RUTA_LOGS, id_simulacion=id_simulacion)
 
@@ -47,10 +52,7 @@ def ejecutar_corrida(
         use_gpu,
     )
 
-    logger.info(
-        "Generando plasma magnetizado (campo turbulento + perfil de densidad)..."
-    )
-
+    logger.info("Generando plasma magnetizado (campo turbulento + perfil de densidad)...")
     bx, by, bz, ne, ne_rel, r = construir_escenario(
         n_spec, b0_microgauss, density_profile=density_profile, use_gpu=use_gpu
     )

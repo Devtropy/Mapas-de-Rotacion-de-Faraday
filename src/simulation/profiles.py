@@ -1,6 +1,7 @@
 """
 Perfiles radiales de densidad de electrones térmicos.
 
+Perspectiva de físico:
 El plasma que llena un cúmulo de galaxias (o cualquier halo caliente) no
 tiene densidad uniforme: cae con el radio. Distintas familias de objetos, o
 distintos niveles de detalle del mismo objeto, se describen mejor con
@@ -94,7 +95,7 @@ class DoubleBetaModel(DensityProfile):
         n_e(r) = n0_1*(1+(r/rc_1)^2)^(-3*beta_1/2)
                  + n0_2*(1+(r/rc_2)^2)^(-3*beta_2/2)
 
-    se usa cuando un solo perfil beta no puede
+    Perspectiva de físico: se usa cuando un solo perfil beta no puede
     reproducir a la vez el exceso de densidad central ("cool core") y la
     caída suave a gran radio de un cúmulo. La componente 1 (r_core chico)
     domina cerca del centro; la componente 2 (r_core grande) domina en las
@@ -128,7 +129,7 @@ class NFWModel(DensityProfile):
 
         n_e(r) = n0 / [ (r/r_s) * (1 + r/r_s)^2 ]
 
-    el NFW es, originalmente, el perfil de densidad
+    Perspectiva de físico: el NFW es, originalmente, el perfil de densidad
     de materia oscura que sale de simulaciones de N-cuerpos. Se incluye
     aquí porque la misma forma funcional -caída ~r^-1 en el centro y ~r^-3
     lejos de él- también aproxima bien la densidad de gas en halos masivos

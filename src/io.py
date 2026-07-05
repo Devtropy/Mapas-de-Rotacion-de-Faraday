@@ -135,9 +135,7 @@ def load_fits(path):
         return hdul[0].data, hdul[0].header
 
 
-def save_hdf5(
-    path, maps: dict, attrs: Optional[dict] = None, group: Optional[str] = None
-):
+def save_hdf5(path, maps: dict, attrs: Optional[dict] = None, group: Optional[str] = None):
     """
     Guarda `maps` en un archivo HDF5, opcionalmente como un grupo con
     nombre (`group`) dentro de un archivo compartido por todo el estudio
@@ -179,7 +177,9 @@ def save_hdf5(
         for nombre, arreglo in maps.items():
             if arreglo is None:
                 continue
-            destino.create_dataset(nombre, data=to_numpy(arreglo), compression="gzip")
+            destino.create_dataset(
+                nombre, data=to_numpy(arreglo), compression="gzip"
+            )
             n_guardados += 1
 
         if attrs:
