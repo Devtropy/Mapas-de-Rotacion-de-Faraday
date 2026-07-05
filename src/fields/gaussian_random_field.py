@@ -38,9 +38,6 @@ import numpy as _np
 from ..backend import get_backend, to_numpy
 from ..logging_config import medir_tiempo_kernel
 
-# Logger propio de este módulo (hijo de "faradaymr.fields" en la jerarquía
-# de logging); ver `faradaymr.logging_config` para la justificación de por
-# qué se usa logging en vez de print() en todo el framework.
 _logger = logging.getLogger(__name__)
 
 
@@ -96,10 +93,46 @@ class GaussianRandomVectorField:
     scale_max: float
     spectrum: Callable = power_law_spectrum
 
+    def __post_init__(self):
+        self._cache = None
+        self._cache_backend = None
+
     def _k_grid(self, xp):
         k_vec = xp.fft.fftfreq(self.n, d=self.dx) * 2.0 * xp.pi
         kx, ky, kz = xp.meshgrid(k_vec, k_vec, k_vec, indexing="ij")
         return kx, ky, kz, xp.sqrt(kx**2 + ky**2 + kz**2)
+
+    def _grid_y_espectro(self, xp):
+        """
+        Devuelve (kx, ky, kz, sigma_k), calculándolos una sola vez por
+        backend y no una vez por realización.
+
+        Físicamente, k y sigma(k) no son parte del "ruido" de una
+        realización: son la geometría de la caja (qué frecuencias espaciales
+        caben en ella) y la forma del espectro de potencia que se le
+        impuso, ambas fijas mientras no cambien n, dx, el índice espectral
+        ni las escalas de inyección/disipación. Lo único que de verdad
+        cambia entre una realización Monte Carlo y la siguiente es la fase
+        y la amplitud aleatorias del ruido gaussiano de entrada (ver
+        `sample`). Recalcular la malla de k y el espectro en cada muestra
+        es como resolver de nuevo la función de transferencia de un filtro
+        cada vez que se le pasa una señal distinta: el filtro no cambió,
+        solo la señal. Para un barrido de miles de realizaciones esa parte
+        recalculada de balde puede dominar el tiempo total aunque, vista
+        sola, cada llamada sea barata.
+        """
+        if getattr(self, "_cache_backend", None) is not xp:
+            kx, ky, kz, k_mag = self._k_grid(xp)
+            sigma_k = self.spectrum(
+                xp,
+                k_mag,
+                self.spectral_index,
+                xp.pi / self.scale_max,
+                xp.pi / self.scale_min,
+            )
+            self._cache = (kx, ky, kz, sigma_k)
+            self._cache_backend = xp
+        return self._cache
 
     @medir_tiempo_kernel
     def sample(self, use_gpu: Optional[bool] = None, rng=None):
@@ -115,14 +148,7 @@ class GaussianRandomVectorField:
         xp = get_backend(use_gpu)
         random = xp.random if rng is None else rng
 
-        kx, ky, kz, k_mag = self._k_grid(xp)
-        sigma_k = self.spectrum(
-            xp,
-            k_mag,
-            self.spectral_index,
-            xp.pi / self.scale_max,
-            xp.pi / self.scale_min,
-        )
+        kx, ky, kz, sigma_k = self._grid_y_espectro(xp)
 
         potencial_vectorial = []
         for _ in range(3):

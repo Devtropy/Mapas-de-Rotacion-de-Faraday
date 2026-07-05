@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from scipy.special import gamma
 
 import config as cfg
-from faradaymr import BetaModel, los as faradaymr_los
+from faradaymr import BetaModel, los as faradaymr_los, get_backend, to_numpy
 from faradaymr.fields import GaussianRandomVectorField
 
 # Logger hijo del árbol "faradaymr": aunque este script vive fuera del
@@ -159,15 +159,14 @@ def fig6_analisis_halo_radio(ruta, r_mapa, bc, i_map, q_map, u_map):
 
 
 def fig3_tendencias_normalizadas(ruta):
+    xp = get_backend(True)
+
     dx = cfg.DX_BASE_KPC
     n_malla = max(cfg.N_BASE, int(np.ceil(2.0 * cfg.LAMBDA_MAX_KPC / dx)))
     lado_caja = n_malla * dx
     l_max_max_valido = lado_caja / 2.0
 
     if cfg.LAMBDA_MAX_KPC > l_max_max_valido:
-        # WARNING (no INFO): esto no es solo el avance de la corrida, es un
-        # aviso físico -si se ignorara, el barrido mediría un artefacto de
-        # tamaño finito de la grilla y no la física de la turbulencia.
         _logger.warning(
             "fig3: LAMBDA_MAX_KPC=%.0f kpc excede la mitad de la caja "
             "disponible (%.0f kpc); se recorta el barrido a ese valor para "
@@ -184,10 +183,10 @@ def fig3_tendencias_normalizadas(ruta):
     estilos = {2.0: "b-", 3.0: "k-", 4.0: "r--"}
 
     perfil_beta = BetaModel(n0=cfg.N0_CM3, r_core=cfg.RC_KPC, beta=cfg.BETA)
-    eje = np.linspace(-n_malla / 2, n_malla / 2, n_malla) * dx
-    xx, yy, zz = np.meshgrid(eje, eje, eje, indexing="ij")
-    r = np.sqrt(xx**2 + yy**2 + zz**2)
-    ne = perfil_beta.density(r, xp=np)
+    eje = xp.linspace(-n_malla / 2, n_malla / 2, n_malla) * dx
+    xx, yy, zz = xp.meshgrid(eje, eje, eje, indexing="ij")
+    r = xp.sqrt(xx**2 + yy**2 + zz**2)
+    ne = perfil_beta.density(r, xp=xp)
 
     fig, axs = plt.subplots(1, 3, figsize=(18, 5))
 
@@ -201,13 +200,13 @@ def fig3_tendencias_normalizadas(ruta):
                 scale_min=cfg.LAMBDA_MIN_KPC,
                 scale_max=l_max,
             )
-            bx, by, bz = campo.sample(use_gpu=False, rng=np.random.RandomState(0))
+            bx, by, bz = campo.sample(use_gpu=True)
             bx, by, bz = GaussianRandomVectorField.normalize_to_rms(
-                bx, by, bz, cfg.B0_MG, xp=np
+                bx, by, bz, cfg.B0_MG, xp=xp
             )
-            rm = faradaymr_los.rotation_measure(ne, bz, cfg.DX_BASE_PC, xp=np)
-            sigmas.append(np.std(rm))
-            medias.append(np.abs(np.mean(rm)))
+            rm = faradaymr_los.rotation_measure(ne, bz, cfg.DX_BASE_PC, xp=xp)
+            sigmas.append(float(to_numpy(xp.std(rm))))
+            medias.append(float(to_numpy(xp.abs(xp.mean(rm)))))
         sigmas = np.array(sigmas)
         medias = np.array(medias)
         estilo = estilos[n_spec]
