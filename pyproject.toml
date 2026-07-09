@@ -30,6 +30,7 @@ packages = [
     "faradaymr.instrument",
     "faradaymr.fields",
     "faradaymr.simulation",
+    "faradaymr.analysis",
 ]
 
 [tool.setuptools.package-dir]
