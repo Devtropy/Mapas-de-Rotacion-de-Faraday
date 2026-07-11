@@ -48,15 +48,43 @@ FARADAY_CONSTANT_CGS = 0.812
 
 
 def rotation_measure(ne, b_parallel, dl, axis=-1, xp=None):
-    """
-    RM(x,y) = 0.812 * suma( n_e * B_parallel * dl ) a lo largo de `axis`.
 
-    ne en cm^-3, b_parallel en microgauss, dl en pc (ver docstring del
-    módulo para la constante). `axis` es el eje de la malla que representa
-    la línea de visión.
+    """
+    Calcula la Medida de Rotación (RM) mediante la suma de
+    0.812 * n_e * B_parallel * dl a lo largo de la línea de visión.
+
+    Con Parámetros:
+
+    n_e : ndarray
+    Densidad electrónica en cm^-3.
+    b_parallel : ndarray
+    Componente del campo magnético paralela a la línea de visión,
+    en microgauss.
+    dl : float
+    Paso de integración en pc.
+    axis : int
+    Eje de la malla que representa la línea de visión.
+
+    Otras cosas a tomar en cuebta: 
+
+    Esta implementación asume una malla cartesiana uniforme con un paso de
+    integración constante (dl) para todas las celdas.
+
+    Por ello, es válida para observaciones con líneas de visión paralelas
+    (Proyectos I y II).
+
+    No debe utilizarse para ray tracing con un observador interior
+    (Proyecto III), donde la longitud recorrida dentro de cada celda depende
+    de la dirección del rayo.
+
+    Véase: los_raytrace.py.
     """
     if xp is None:
         import numpy as xp
+    # Esta implementación supone un paso de integración constante (dl)
+    # a lo largo de toda la línea de visión. No es válida para ray tracing
+    # con observador interior, esa funcionalidad deberá
+    # implementarse en los_raytrace.py.
     return xp.sum(FARADAY_CONSTANT_CGS * ne * b_parallel * dl, axis=axis)
 
 
