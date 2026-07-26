@@ -1,6 +1,11 @@
 from __future__ import annotations
 
 import os
+import sys
+
+_RAIZ_REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if _RAIZ_REPO not in sys.path:
+    sys.path.insert(0, _RAIZ_REPO)
 
 import config as cfg
 from model import construir_escenario
@@ -52,7 +57,9 @@ def ejecutar_corrida(
         use_gpu,
     )
 
-    logger.info("Generando plasma magnetizado (campo turbulento + perfil de densidad)...")
+    logger.info(
+        "Generando plasma magnetizado (campo turbulento + perfil de densidad)..."
+    )
     bx, by, bz, ne, ne_rel, r = construir_escenario(
         n_spec, b0_microgauss, density_profile=density_profile, use_gpu=use_gpu
     )
