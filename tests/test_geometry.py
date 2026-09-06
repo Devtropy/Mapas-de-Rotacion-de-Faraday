@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from faradaymr.simulation.geometry import cylindrical_radius
+from faradaymr.simulation.geometry import cylindrical_radius, filament_axis_from_viewing_angle
 
 def test_cylindrical_radius_eje_z():
     """Prueba que el radio cilíndrico respecto al eje Z ignora la coordenada Z."""
@@ -32,3 +32,36 @@ def test_cylindrical_radius_eje_inclinado():
     
     # La distancia perpendicular de (1,1,1) a la recta x=y, z=0 es 1 (la altura en Z)
     np.testing.assert_allclose(r_calculado, [1.0], rtol=1e-5)
+
+def test_filament_axis_theta_cero_es_paralelo_a_la_los():
+    # theta=0: el filamento se ve "de frente", su eje coincide con el eje Z
+    # de la caja, que es la línea de visión que asume `faradaymr.los`.
+    eje = filament_axis_from_viewing_angle(0.0)
+    np.testing.assert_allclose(eje, [0.0, 0.0, 1.0], atol=1e-12)
+ 
+ 
+def test_filament_axis_theta_90_es_perpendicular_a_la_los():
+    # theta=pi/2: el filamento se ve "de lado", su eje cae en el plano del
+    # cielo (perpendicular al eje Z de integración).
+    eje = filament_axis_from_viewing_angle(np.pi / 2)
+    np.testing.assert_allclose(eje, [1.0, 0.0, 0.0], atol=1e-12)
+ 
+ 
+def test_filament_axis_siempre_es_vector_unitario():
+    # Para cualquier ángulo intermedio, la rotación 2D en (x,z) no cambia
+    # la norma del vector: sigue siendo un eje válido para pasarle a
+    # `cylindrical_radius`.
+    thetas = np.linspace(0.0, np.pi / 2, 25)
+    for theta in thetas:
+        eje = filament_axis_from_viewing_angle(theta)
+        assert np.isclose(np.linalg.norm(eje), 1.0)
+ 
+ 
+def test_filament_axis_permanece_en_el_plano_xz():
+    # El "roll" alrededor del propio eje del filamento no es observable por
+    # su simetría cilíndrica, así que la componente Y debe ser exactamente
+    # cero para cualquier ángulo -no una rotación 3D genérica.
+    thetas = np.linspace(0.0, 2 * np.pi, 13)
+    for theta in thetas:
+        eje = filament_axis_from_viewing_angle(theta)
+        assert eje[1] == 0.0
