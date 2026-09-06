@@ -33,3 +33,22 @@ def cylindrical_radius(xx, yy, zz, axis_direction, xp=None):
     
     # La distancia cilíndrica es la norma del vector perpendicular
     return xp.linalg.norm(perp, axis=-1)
+
+def filament_axis_from_viewing_angle(theta_rad):
+    """
+    Vector unitario del eje del filamento para un ángulo de vista theta_rad
+    respecto a la línea de visión (que faradaymr.los asume siempre fija en
+    el eje Z de la caja, axis=-1).
+
+    En vez de rotar la línea de visión se rota el objeto: 
+    se gira el eje del filamento dentro de la misma caja cúbica
+    regular, dejando la geometría de integración exactamente como está.
+
+    theta_rad = 0    -> eje = (0, 0, 1): filamento "de frente" (paralelo a la LoS).
+    theta_rad = pi/2 -> eje = (1, 0, 0): filamento "de lado" (perpendicular a la LoS).
+
+    Rotación 2D en (x, z), no 3D genérica: por simetría cilíndrica el
+    "roll" del filamento no es observable.
+    """
+    import numpy as np
+    return np.array([np.sin(theta_rad), 0.0, np.cos(theta_rad)])
